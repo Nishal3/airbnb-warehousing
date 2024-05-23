@@ -32,10 +32,10 @@ Creative commons liscense for data: [Liscense][creative_liscense]
 
 <!-- Images  -->
 
-[ RDS_Search ]: https://airbnb-project-nishal.s3.us-east-2.amazonaws.com/project_images/image_2024-05-12_151243986.png
-[ RDS_Click_Databases ]: https://airbnb-project-nishal.s3.us-east-2.amazonaws.com/project_images/RDS-Click-Databases.png
-[ RDS_Click_Create ]: https://airbnb-project-nishal.s3.us-east-2.amazonaws.com/project_images/RDS-Click-Create.png
-[ RDS_Choose_MySQL ]: https://airbnb-project-nishal.s3.us-east-2.amazonaws.com/project_images/RDS-Choose-MySQL.png
+[ RDS_Search ]: https://dqkl9myp5qci5.cloudfront.net/image_2024-05-12_151243986.png "Search AWS for RDS"
+[ RDS_Click_Databases ]: https://dqkl9myp5qci5.cloudfront.net/RDS-Click-Databases.png "Click 'Databases' in RDS"
+[ RDS_Click_Create ]: https://dqkl9myp5qci5.cloudfront.net/RDS-Click-Create.png "Click on 'Create' in the databases section of RDS"
+[ RDS_Choose_MySQL ]: https://dqkl9myp5qci5.cloudfront.net/RDS-Choose-MySQL.png "On the database creation page, choose 'MySQL'"
 
 <!-- Uber Data -->
 
