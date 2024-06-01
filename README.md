@@ -2,27 +2,38 @@
 
 ## Data Loading
 
-We are starting off with loading data into RDS to emulate a real-world scenario. We have airbnb data about the listings and want to store it into a data warehouse.
+We are starting off with loading data into RDS to emulate a real-world scenario: data is already in an RDS instance and we need to perform an ETL to move it to Redshift. We have airbnb data about the listings and want to store it into a data warehouse.
 
-### 1 Create The RDS Instance
+### Creating The RDS Instance
 
-#### 1.1 Log in to AWS and Search RDS
+1. Log into AWS and search for RDS
+2. Click "Databases" then click "Create database"
+3. Click "Easy create" then choose MySQL
+4. Scroll down a bit and click "Free Tier"
+5. Set your database name under "DB instance identifier"
+6. Make a master username or leave it as admin
+7. Click "Self managed" for credentials management and enter a password for your database
+8. Click "Set up EC2 connection" and choose "Connect to an EC2 compute resource"
+9. If you have not made an EC2 instance for this separately, click "Create EC2 instance"
+   1. Name your EC2 instance
+   2. Keep the defaults
+   3. Click "Launch instance", you will be prompted to select, create, or proceed without a key pair
+   4. If you want a key pair continue reading these steps, or continue without one. No key pair will make the process less secure
+   5. Click "Create new key pair" and name it
+   6. Leave everything else default and click "Launch instance", **make sure you don't delete the downloaded key pair. we'll need it later to get into the EC2 instance**
 
-![RDS_Search]
+Now everything for RDS is complete!
 
-#### 1.2 Click Databases
+### Loading Our Data Into RDS
 
-![RDS_Click_Databases]
+1. Go to the EC2 Console
 
-#### 1.3 Click Create Database
+## ETL Process Using AWS Glue
 
-![RDS_Click_Create]
+### Creating a Connector to the RDS Instance
 
-#### 1.4 Choose MySQL -- Keep All The Configuration Default Unless Stated Otherwise
-
-![RDS_Choose_MySQL]
-
-#### 1.5 Select Free Tier
+1. Go to the AWS Glue home page
+2.
 
 ## Data and Creative Commons Liscense
 
@@ -31,11 +42,6 @@ Data used: [Columbus, Ohio, United States 26 December, 2023 from Airbnb][data_li
 Creative commons liscense for data: [Liscense][creative_liscense]
 
 <!-- Images  -->
-
-[ RDS_Search ]: https://dqkl9myp5qci5.cloudfront.net/image_2024-05-12_151243986.png "Search AWS for RDS"
-[ RDS_Click_Databases ]: https://dqkl9myp5qci5.cloudfront.net/RDS-Click-Databases.png "Click 'Databases' in RDS"
-[ RDS_Click_Create ]: https://dqkl9myp5qci5.cloudfront.net/RDS-Click-Create.png "Click on 'Create' in the databases section of RDS"
-[ RDS_Choose_MySQL ]: https://dqkl9myp5qci5.cloudfront.net/RDS-Choose-MySQL.png "On the database creation page, choose 'MySQL'"
 
 <!-- Uber Data -->
 
