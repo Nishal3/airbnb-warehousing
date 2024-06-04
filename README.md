@@ -13,14 +13,14 @@ We are starting off with loading data into RDS to emulate a real-world scenario:
 5. Set your database name under "DB instance identifier"
 6. Make a master username or leave it as admin
 7. Click "Self managed" for credentials management and enter a password for your database
-8. Click "Set up EC2 connection" and choose "Connect to an EC2 compute resource"
+8. Now click "Set up EC2 connection" and choose "Connect to an EC2 compute resource"
 9. If you have not made an EC2 instance for this separately, click "Create EC2 instance"
    1. Name your EC2 instance
    2. Keep the defaults
    3. Click "Launch instance", you will be prompted to select, create, or proceed without a key pair
    4. If you want a key pair continue reading these steps, or continue without one; no key pair will make the process less secure
    5. Click "Create new key pair" and name it
-   6. Leave everything else default and click "Launch instance".
+   6. Leave everything else default and click "Launch instance"
 
 **Make sure you don't delete the downloaded key pair. We might need it later to get into the EC2 instance**
 
@@ -45,19 +45,28 @@ If this does not work, follow the steps in the SSH client tab in the "Connect to
    3. Installing the file: `sudo dnf install mysql80-community-release-el9-1.noarch.rpm -y`
    4. Installing MySQL: `sudo dnf install mysql-community-server -y`
    5. Starting MySQL: `sudo systemctl start mysqld`
-2. To download the CSV file run `curl -O https://raw.githubusercontent.com/Nishal3/airbnb-warehousing/main/data/listings.csv`
+2. Make sure you are at the home directory, just run the command `cd` to make sure of that
+3. To download the CSV file run `curl -O https://raw.githubusercontent.com/Nishal3/airbnb-warehousing/main/data/listings.csv`
 
 #### Step 3 -- Entering and Loading Data Into RDS
 
-2. Go to the RDS console and click on the database you've created. In the connectivity and security section, there is an endpoint, copy the endpoint
+**All files used in this step is in the `RDS_data_loading` directory**
 
-3. Connect to the SQL by running this command: `mysql --user=admin --host=<YOUR_RDS_ENDPOINT> --password` replacing "<YOUR_RDS_ENDPOINT>" with your endpoint. If you made the username something other than admin, make sure you change the `--user` option as well!
+1. Go to the RDS console and click on the database you've created. In the connectivity and security section, there is an endpoint, copy and save the endpoint for later
 
-4. Create the `columbus_oh_listings` database by running the SQL command `CREATE DATABASE columbus_oh_listings;` and run the `SHOW SCHEMAS;` command to see if this database is present.
+2. Connect to the SQL by running this command: `mysql --user=admin --host=<YOUR_RDS_ENDPOINT> --password --local-infile` replacing "<YOUR_RDS_ENDPOINT>" with your endpoint. If you made the username something other than admin, make sure you change the `--user` option as well!
+
+3. Enter your RDS password when prompted
+
+4. Create the `columbus_oh_listings` database by running the SQL command `CREATE DATABASE columbus_oh_listings;` and run the `SHOW SCHEMAS;` command to see if this database is present
 
 5. Run `USE columbus_oh_listings;`
 
 6. Create the `listings` table by copying and pasting the file in this repo named `RDS_listings_table_creation.sql` and running the script
+
+7. Load data into the table by copying and pasting the `RDS_data_load_script.sql` script and running it
+
+**Now we've loaded our "pre-existing" database!**
 
 ## ETL Process Using AWS Glue
 
