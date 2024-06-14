@@ -103,11 +103,48 @@ This marks the start of set-up and usage of AWS Glue to extract and transform th
 7. Click "Network options" and click the VPC associated with the RDS instance, if theres only one click that one
 8. You can choose any subnet for subnets and for security groups, choose the one associating the EC2 instance with the RDS instance it should be something like "ec2-rds"
 9. Click "Next" and assign a meaningful name and description and then hit "Next" again
-10. Click "Create connection" and we're done!
+10. Click "Create connection", and we're done!
 
 #### 3.2.1 Testing the Connection
 
-1. Choose
+1. Select the connection you just made and click "Actions" -> "Test connection"
+2. For the IAM role, put the role we just created and then click "Confirm"
+3. Wait for a successful response
+   **If you don't get a successful response, make sure your IAM role is correct and the VPC is the same as the VPC containing your database. Other things to consider might be security group inbound/outbound rules**
+
+## 4 Redshift Serverless Configuration and Table Creation
+
+### 4.1 Creating a Default Workgroup
+
+1. Go to AWS Redshift, click the hamburger menu, and then "Redshift Serverless"
+2. On clicking, it will take you to the workgroup creation page, click "Customize Settings"
+3. Leave everything other than "Admin user name" and "Admin password"
+4. Assign a admin username or leave it as the default
+5. Click "Manually add the admin password" and type in a secure password
+6. Click "Save configuration", and that's our workgroup created
+
+### 4.2 Creating Tables for Transformed Data
+
+## 5 Using a Glue Crawler to Extract Data From the RDS Instance
+
+### 5.1 Creating a Database in Glue to House the Data
+
+1. In the Glue console, click "Databases"
+2. Click "Add database"
+3. Give it a fitting name like "raw_listings_data" and a description
+4. Click create, and now we have a database to house the incoming data!
+
+### 5.2 Creating a Crawler to Extract Data
+
+1. Go to the Glue console and click "Crawlers" on the left menu
+2. Hit "Create crawler" and give it a fitting name and description
+3. Hit "Next" and click "Add a data source"
+4. Make the data source a JDBC connection
+5. For the connection, choose the one we just made
+6. The path would just be "listings" because we already chose the database when making the connection
+7. Click "Next" and choose the IAM role we created before. Proceed by clicking "Next"
+8. For the target database, choose the database we just made in Glue and click "Next"
+9. Click "Create crawler", and we're fetching the column metadata!
 
 ## Data and Creative Commons Liscense
 

@@ -166,3 +166,6 @@ cython_debug/
 
 # Columns of listings table listed out in a txt file, not really needed just used for development
 listings_columns.txt
+
+# Virtual Environment
+airbnb_dw_venv/
