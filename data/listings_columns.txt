@@ -1,8 +1,8 @@
-id X
+id X 
 listing_url X
 scrape_id X
 last_scraped X
-source X
+source X - Two options, previous scrape or city scrape. Make one represent 1 and another represent 0
 name X
 description X
 neighborhood_overview X
@@ -13,28 +13,29 @@ host_name X
 host_since X
 host_location X
 host_about X
-host_response_time X
-host_response_rate X
-host_acceptance_rate X
-host_is_superhost X
+host_response_time X -- w/in hour = 'H', few hours = 'FH', day = 'D', few days = 'FD'
+host_response_rate X -- Convert to decimal
+host_acceptance_rate X -- Convert to decimal
+host_is_superhost X -- t=1, f=0
 host_thumbnail_url X
 host_picture_url X
 host_neighbourhood X
 host_listings_count X
 host_total_listings_count X
-host_verifications X
-host_has_profile_pic X
-host_identity_verified X
+host_verifications X -- List of email, phone, and work_email. Character with 3 nums indicating each one respectively. Ex only email is '100'
+host_has_profile_pic X -- t=1, f=0
+host_identity_verified X -- t=1, f=0
 neighbourhood X
 neighbourhood_cleansed X
 neighbourhood_group_cleansed X
 latitude X
 longitude X
-property_type X
+property_type X -- Options for first word: {Entire: "Entire property", "Room / Private": "A dedicated room for the person", "Shared": "Get the first word and next. Likely to be shared room", "Miscallaneous": "Write all of it down"}
 room_type X
 accommodates X
 bathrooms X
-bathrooms_text X
+bathrooms_text X -- Int followed by baths. Shared unless stated otherwise
+bathrooms_desc X -- description of bathroom. Shared, private, etc.
 bedrooms X
 beds X
 amenities X
@@ -48,7 +49,7 @@ maximum_maximum_nights X
 minimum_nights_avg_ntm X
 maximum_nights_avg_ntm X
 calendar_updated X
-has_availability X
+has_availability X -- Either t or f, 1 == T, 0 == F
 availability_30 X
 availability_60 X
 availability_90 X
@@ -67,7 +68,7 @@ review_scores_communication X
 review_scores_location X
 review_scores_value X
 license X
-instant_bookable X
+instant_bookable X -- t=1, f=0
 calculated_host_listings_count X
 calculated_host_listings_count_entire_homes X
 calculated_host_listings_count_private_rooms X

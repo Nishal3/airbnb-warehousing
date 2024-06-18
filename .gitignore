@@ -169,3 +169,6 @@ listings_columns.txt
 
 # Virtual Environment
 airbnb_dw_venv/
+
+# Checklist for transforming data
+checklist/

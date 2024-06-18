@@ -125,6 +125,9 @@ This marks the start of set-up and usage of AWS Glue to extract and transform th
 
 ### 4.2 Creating Tables for Transformed Data
 
+1. Get into the query editor by clicking "Query editor v2" on the left menu
+2. Create the tables by pasting in the SQL Script from the `table_creation.sql` file, and click "Run"
+
 ## 5 Using a Glue Crawler to Extract Data From the RDS Instance
 
 ### 5.1 Creating a Database in Glue to House the Data
