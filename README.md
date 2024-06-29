@@ -1,5 +1,7 @@
 # Airbnb Warehousing: _**Warehousing Airbnb Data From Ohio**_
 
+![ visual ]
+
 ## Data Loading
 
 We are starting off with loading data into RDS to emulate a real-world scenario: data is already in an RDS instance and we need to perform an ETL to move it to Redshift. We have airbnb data about the listings and want to store it into a data warehouse after running some sort of transformation.
@@ -156,6 +158,8 @@ Data used: [Columbus, Ohio, United States 26 December, 2023 from Airbnb][data_li
 Creative commons liscense for data: [Liscense][creative_liscense]
 
 <!-- Images  -->
+
+[ visual ]: https://dqkl9myp5qci5.cloudfront.net/airbnb_listings_etl_visual.png
 
 <!-- Airbnb Data -->
 
