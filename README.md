@@ -4,7 +4,7 @@
 
 ## Data Loading
 
-We are starting off with loading data into RDS to emulate a real-world scenario: data is already in an RDS instance and we need to perform an ETL to move it to Redshift. We have airbnb data about the listings and want to store it into a data warehouse after running some sort of transformation.
+We are starting off with loading data into RDS to emulate a real-world scenario: data is already in an RDS instance and we need to perform an ETL to move it to Redshift. We have airbnb data about the listings and want to store it into a data warehouse after running some sort of transformation. Finally, we make a dashboard using Tableau to finalize the project.
 
 ## 1 Creating The RDS Instance
 
@@ -79,44 +79,9 @@ Now preconfiguration for RDS is complete!
 
 **Now we've loaded our "pre-existing" database!**
 
-## Extract and Transform Part of ETL Using AWS Glue
+## 3 Redshift Serverless Configuration and Table Creation
 
-This marks the start of set-up and usage of AWS Glue to extract and transform the data stored in the RDS instance.
-
-## 3 Creating a Connector to the RDS Instance
-
-### 3.1 Creating an IAM Role for Glue to Access RDS
-
-1. Search IAM in the AWS console, and click "Roles" in the left menu
-2. Click "Create role" and select "AWS service"
-3. In the "Use case" section, search for Glue
-4. Click "Next" and search for "AmazonRDSReadOnlyAccess" and check it
-5. Then search and check "AWSGlueServiceRole" and click "Next"
-6. Assign a meaningful name and description to the role and then click "Create role"
-
-### 3.2 Creating the Glue Connection and Testing the Connection
-
-1. Go to the AWS Glue home page
-2. Click "Data connections" on the left menu
-3. In the "Connections" section click "Create connection" and search for MySQL
-4. For "Database instances", the RDS instance you created earlier should show up, click that
-5. For "Database name" write "columbus_oh_listings"
-6. Type in your credentials for the database
-7. Click "Network options" and click the VPC associated with the RDS instance, if theres only one click that one
-8. You can choose any subnet for subnets and for security groups, choose the one associating the EC2 instance with the RDS instance it should be something like "ec2-rds"
-9. Click "Next" and assign a meaningful name and description and then hit "Next" again
-10. Click "Create connection", and we're done!
-
-#### 3.2.1 Testing the Connection
-
-1. Select the connection you just made and click "Actions" -> "Test connection"
-2. For the IAM role, put the role we just created and then click "Confirm"
-3. Wait for a successful response
-   **If you don't get a successful response, make sure your IAM role is correct and the VPC is the same as the VPC containing your database. Other things to consider might be security group inbound/outbound rules**
-
-## 4 Redshift Serverless Configuration and Table Creation
-
-### 4.1 Creating a Default Workgroup
+### 3.1 Creating a Default Workgroup
 
 1. Go to AWS Redshift, click the hamburger menu, and then "Redshift Serverless"
 2. On clicking, it will take you to the workgroup creation page, click "Customize Settings"
@@ -125,33 +90,98 @@ This marks the start of set-up and usage of AWS Glue to extract and transform th
 5. Click "Manually add the admin password" and type in a secure password
 6. Click "Save configuration", and that's our workgroup created
 
-### 4.2 Creating Tables for Transformed Data
+### 3.2 Creating Database and Tables for Transformed Data
 
 1. Get into the query editor by clicking "Query editor v2" on the left menu
-2. Create the tables by pasting in the SQL Script from the `table_creation.sql` file, and click "Run"
+2. Create the database by clicking the "Create" which has a plus and click "Database"
+3. Paste this in as the name: "transformed_columbus_oh_listings_data", or name it yourself, be sure to remember the DB name though
+4. For "Users and groups", have the database user be "admin", then click "Create database"
+5. In the query editor, click the second dropdown, it should have "dev" on it, and select the database we just created
+6. Create the tables by pasting in the SQL Script from the `table_creation.sql` file, and click "Run"
 
-## 5 Using a Glue Crawler to Extract Data From the RDS Instance
+## ETL Using AWS Glue
 
-### 5.1 Creating a Database in Glue to House the Data
+This marks the start of set-up and usage of AWS Glue to extract, transform, and load the data stored in the RDS instance.
+
+## 4 Creating a Connector to the RDS Instance and Redshift Serverless
+
+### 4.1 Creating an IAM Role for Glue to Access RDS and Redshift
+
+1. Search IAM in the AWS console, and click "Roles" in the left menu
+2. Click "Create role" and select "AWS service"
+3. In the "Use case" section, search for Glue
+4. Click "Next" and search for "AmazonRDSReadOnlyAccess" and check it
+5. Now search for "AmazonRedshiftFullAccess" and check that
+6. Then search and check "AWSGlueServiceRole" and click "Next"
+7. Assign a meaningful name and description to the role and then click "Create role"
+
+### 4.2 Creating the Glue Connection and Testing the Connection
+
+1. Go to the AWS Glue home page
+2. Click "Data connections" on the left menu
+
+#### 4.2.1 Creating RDS Connection
+
+1. In the "Connections" section click "Create connection" and search for MySQL
+2. For "Database instances", the RDS instance you created earlier should show up, click that
+3. For "Database name" write "columbus_oh_listings"
+4. Type in your credentials for the database
+5. Click "Network options" and click the VPC associated with the RDS instance, if theres only one click that one
+6. You can choose any subnet for subnets and for security groups, choose the one associating the EC2 instance with the RDS instance it should be something like "ec2-rds"
+7. Click "Next" and assign a meaningful name and description and then hit "Next" again
+8. Click "Create connection", and we're done!
+
+#### 4.2.2 Creating Redshift Connection
+
+Same steps as RDS connection setup, but selecting Amazon Redshift for the data source
+
+**_Note_: If you assigned the Redshift workgroup a VPC other than the default, you will need to assign the same VPC for the Glue Connection**
+
+1. Click "Create connection" and select Amazon Redshift. Click "Next"
+2. The default workgroup we made for Redshift Serverless should be there under "Database instances"
+3. Enter the database name: "transformed_columbus_oh_listings_data" or the name you assigned it
+4. Enter the username and password you set for the default workgroup
+5. Click "Next" and assign it a meaningful name and description that you can recognize later
+6. Click "Next" again and hit "Create connection"
+
+#### 4.2.3 Testing the Connections
+
+1. Select the connection you just made and click "Actions" -> "Test connection"
+2. For the IAM role, put the role we just created and then click "Confirm"
+3. Wait for a successful response
+4. Rinse and repeat for the other connection you made
+
+**If you don't get a successful response, make sure your IAM role is correct and the VPC is the same as the VPC containing your database or redshift workgroup. Other things to consider might be security group inbound/outbound rules**
+
+## 5 Using a Glue Crawler to Extract Metadata From Our Data Stores
+
+### 5.1 Creating the Databases in Glue Catalog to Connect Data to RDS and Redshift
 
 1. In the Glue console, click "Databases"
 2. Click "Add database"
-3. Give it a fitting name like "raw_listings_data" and a description
-4. Click create, and now we have a database to house the incoming data!
+3. Give it a fitting name like "airbnb_untransformed_data" and a description
+4. Click create
+5. Again, click "Databases" and create another for the transformed data. Give it a fitting name like "airbnb_transformed_data", you know the process from here!
 
-### 5.2 Creating a Crawler to Extract Data
+Now we've set up databases in Glue Catalog!
+
+### 5.2 Creating a Crawler to Get the Blueprint of the Data for Both RDS and Redshfit
+
+Crawlers don't actually copy the data into Glue. They collect metadata about the data and store in the Glue Catalog. The data stores we "extract data" [not actual data, just metadata] from are stored in a Glue database. Refer to the [ official docs ][ official_glue_docs ] for more info.
 
 1. Go to the Glue console and click "Crawlers" on the left menu
 2. Hit "Create crawler" and give it a fitting name and description
 3. Hit "Next" and click "Add a data source"
 4. Make the data source a JDBC connection
-5. For the connection, choose the one we just made
-6. The path would just be "listings" because we already chose the database when making the connection
+5. For the connection, choose the one we made for RDS
+6. The path would be "columbus_oh_listings/listings"
 7. Click "Next" and choose the IAM role we created before. Proceed by clicking "Next"
-8. For the target database, choose the database we just made in Glue and click "Next"
-9. Click "Create crawler", and we're fetching the column metadata!
+8. For the target database, choose the database we made in Glue for the untransformed data and click "Next"
+9. Click "Create crawler"
+10. Rinse and repeat for Redshift assigning meaningful names and using the connection and database in Glue associating with Redshift
+11. Select the crawlers and hit "Run". And now, we've fetched the column metadata for both data source and target!
 
-## Data and Creative Commons Liscense
+## Data and Creative Commons Liscense for Data
 
 Data used: [Columbus, Ohio, United States 26 December, 2023 from Airbnb][data_link]
 
@@ -165,3 +195,7 @@ Creative commons liscense for data: [Liscense][creative_liscense]
 
 [ data_link ]: http://insideairbnb.com/get-the-data/
 [ creative_liscense ]: http://creativecommons.org/licenses/by/4.0/
+
+<!-- Other Links -->
+
+[ official_glue_docs ]: https://docs.aws.amazon.com/glue/latest/dg/console-tables.html

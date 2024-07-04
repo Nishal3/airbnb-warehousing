@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS scrapings (
-    scrapings_id BIGINT PRIMARY KEY,
+    scraping_id BIGINT PRIMARY KEY,
     scrape_id BIGINT,
     last_scraped DATE,
     source INT
@@ -79,10 +79,10 @@ CREATE TABLE IF NOT EXISTS property (
     property_type VARCHAR(255),
     room_type VARCHAR(100),
     accommodates INT,
-    bathrooms NUMERIC,
-    bathrooms_desc VARCHAR(10),
+    bathrooms NUMERIC(5, 1),
+    bathrooms_desc VARCHAR(50),
     beds INT,
-    daily_price SMALLMONEY
+    daily_price NUMERIC(8, 2)
 );
 
 CREATE TABLE IF NOT EXISTS reviews_diagnostics (
@@ -104,13 +104,13 @@ CREATE TABLE IF NOT EXISTS reviews_diagnostics (
 
 CREATE TABLE IF NOT EXISTS listings (
     listing_id BIGINT PRIMARY KEY,
-    scrapings_id INT,
-    host_id INT,
-    neighbourhood_id INT,
-    property_id INT,
-    minmax_insights_id INT,
-    avail_info_id INT,
-    rev_diag_id INT,
+    scrapings_id BIGINT,
+    host_id BIGINT,
+    neighbourhood_id BIGINT,
+    property_id BIGINT,
+    minmax_insights_id BIGINT,
+    avail_info_id BIGINT,
+    rev_diag_id BIGINT,
     listing_url VARCHAR(100),
     name VARCHAR(255),
     picture_url VARCHAR(255),
