@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS reviews_diagnostics (
 
 CREATE TABLE IF NOT EXISTS listings (
     listing_id BIGINT PRIMARY KEY,
-    scrapings_id BIGINT,
+    scraping_id BIGINT,
     host_id BIGINT,
     neighbourhood_id BIGINT,
     property_id BIGINT,
@@ -116,8 +116,8 @@ CREATE TABLE IF NOT EXISTS listings (
     picture_url VARCHAR(255),
     license VARCHAR(10),
     instant_bookable INT,
-    FOREIGN KEY(scrapings_id)
-        REFERENCES scrapings(scrapings_id),
+    FOREIGN KEY(scraping_id)
+        REFERENCES scrapings(scraping_id),
     FOREIGN KEY(host_id)
         REFERENCES host(host_id),
     FOREIGN KEY(neighbourhood_id)
