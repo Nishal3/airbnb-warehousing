@@ -4,7 +4,14 @@ from awsglue.transforms import *
 from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from pyspark.sql.functions import udf, col, split, monotonically_increasing_id
-from pyspark.sql.types import StringType, IntegerType
+from pyspark.sql.types import (
+    StringType,
+    IntegerType,
+    DecimalType,
+    LongType,
+    DoubleType,
+    DateType,
+)
 from pyspark.errors import AnalysisException
 from pyspark.sql.types import StructField, StructType
 from awsglue.context import GlueContext
@@ -42,6 +49,8 @@ args = getResolvedOptions(sys.argv, ["JOB_NAME"])
 # Creating SparkContext and GlueContext
 sc = SparkContext.getOrCreate()
 glueContext = GlueContext(sc)
+
+# Initializing Glue Logger
 logger = glueContext.get_logger()
 
 # Creating SparkSession and Job
@@ -56,11 +65,16 @@ logger.info("Starting Job...")
 logger.info("Creating DynamicFrame from RDS...")
 
 # Loading in RDS data from AWS Glue
-RDSdata = glueContext.create_dynamic_frame.from_catalog(
-    database="airbnb_untransformed_data",
-    table_name="columbus_oh_listings_listings",
-    transformation_ctx="RDSdata",
-)
+try:
+    RDSdata = glueContext.create_dynamic_frame.from_catalog(
+        database="airbnb_untransformed_data",
+        table_name="columbus_oh_listings_listings",
+        transformation_ctx="RDSdata",
+    )
+except Exception as e:
+    logger.error(f"Error creating DynamicFrame from RDS: {e}", exc_info=True)
+    raise e
+
 logger.info("Created DynamicFrame from RDS")
 
 logger.info("Converting DynamicFrame to Spark DataFrame...")
@@ -195,15 +209,11 @@ logger.info("Transforming Listings Table With SQL...")
 try:
     listingDf = spark.sql(listingDfQuery)
 except AnalysisException as e:  # Most common error, failed to analyze SQL query
-    logger.error(
-        f"Error transforming listings table with SQL: {e}", exc_info=True
-    )
+    logger.error(f"Error transforming listings table with SQL: {e}", exc_info=True)
     # Keep note we don't have to stop the SparkContext, Glue manages that itself
     raise e
 except Exception as e:  # Any other error
-    logger.error(
-        f"Error transforming listings table with SQL: {e}", exc_info=True
-    )
+    logger.error(f"Error transforming listings table with SQL: {e}", exc_info=True)
     raise e
 
 
@@ -214,7 +224,9 @@ property_baths_split = split(col("bathrooms"), " ", limit=2)
 
 # Adding the two new columns
 listingDf = listingDf.withColumn("bathroom_desc", property_baths_split.getItem(1))
-listingDf = listingDf.withColumn("bathrooms", property_baths_split.getItem(0))
+listingDf = listingDf.withColumn(
+    "bathrooms", property_baths_split.getItem(0).cast("decimal")
+)
 
 logger.info("Transforming Host Verifications...")
 # Transforming Host Verifications
@@ -360,7 +372,7 @@ scrapingsDf = scrapingsDf.withColumn("scraping_id", monotonically_increasing_id(
 
 # Neighbourhood Table
 neighbourhoodDf = listingDf.select(
-    "neighbourhood", "neighbourhood_cleansed", "neighbourhood_cleansed"
+    "neighbourhood", "neighbourhood_overview", "neighbourhood_cleansed"
 )
 
 neighbourhoodDf = neighbourhoodDf.dropDuplicates()
@@ -425,26 +437,13 @@ hostListingsDiags_host_join_conditions = [
     "calculated_host_listings_count_shared_rooms",
 ]
 
-logger.info("Joining Host Tables...")
+logger.info("Validating Host Table Schemas...")
 
 # Schema Validation for Host Tables
-hostSchema = StructType(
-    [
-        StructField("host_id", IntegerType(), True),
-        StructField("host_url", StringType(), True),
-        StructField("host_name", StringType(), True),
-        StructField("host_since", StringType(), True),
-        StructField("host_location", StringType(), True),
-        StructField("host_about", StringType(), True),
-        StructField("host_thumbnail_url", StringType(), True),
-        StructField("host_picture_url", StringType(), True),
-        StructField("host_neighbourhood", StringType(), True),
-    ]
-)
 
 hostQualificationsSchema = StructType(
     [
-        StructField("hostQualifications_id", IntegerType(), True),
+        StructField("hostQualifications_id", IntegerType(), False),
         StructField("host_response_time", StringType(), True),
         StructField("host_response_rate", StringType(), True),
         StructField("host_acceptance_rate", StringType(), True),
@@ -459,7 +458,7 @@ hostQualificationsSchema = StructType(
 
 hostListingsDiagsSchema = StructType(
     [
-        StructField("hostListingsDiags_id", IntegerType(), True),
+        StructField("hostListingsDiags_id", IntegerType(), False),
         StructField("calculated_host_listings_count", IntegerType(), True),
         StructField("calculated_host_listings_count_entire_homes", IntegerType(), True),
         StructField(
@@ -469,13 +468,18 @@ hostListingsDiagsSchema = StructType(
     ]
 )
 
+# Schema Validation
 try:
-    hostDf.schema.validate(hostSchema)
-    hostQualificationsDf.schema.validate(hostQualificationsSchema)
+    hostQualificationsDf.schema == (hostQualificationsSchema)
+    hostListingsDiagsDf.schema == (hostListingsDiagsSchema)
 
 except AnalysisException as e:
     logger.error(f"Error validating host schema: {e}", exc_info=True)
     raise e
+
+logger.info("Host Schemas Validated")
+
+logger.info("Joining Host Tables...")
 
 try:
     hostDf = (
@@ -504,6 +508,34 @@ except Exception as e:  # Chance of error is unlikely, just in case I've put thi
     raise e
 
 logger.info("Host Tables Joined")
+
+logger.info("Validating Host Table Schema After Join...")
+# Validating Host Table Schema After Join
+hostSchema = StructType(
+    [
+        StructField(
+            "host_id", LongType(), True
+        ),  # Nullable is True because we did not run monotonically_increasing_id
+        StructField("hostQualifications_id", IntegerType(), True),
+        StructField("hostListingsDiags_id", IntegerType(), True),
+        StructField("host_url", StringType(), True),
+        StructField("host_name", StringType(), True),
+        StructField("host_since", DateType(), True),
+        StructField("host_location", StringType(), True),
+        StructField("host_about", StringType(), True),
+        StructField("host_thumbnail_url", StringType(), True),
+        StructField("host_picture_url", StringType(), True),
+        StructField("host_neighbourhood", StringType(), True),
+    ]
+)
+
+try:
+    hostDf.schema == (hostSchema)
+except AnalysisException as e:
+    logger.error(f"Error Validating Host Schema: {e}", exc_info=True)
+    raise e
+
+logger.info("Host Table Schema After Join Validated")
 
 # Final Join
 property_join_conditions = [
@@ -541,6 +573,97 @@ minmax_join_conditions = [
     "minimum_nights_avg_ntm",
     "maximum_nights_avg_ntm",
 ]
+
+propertyDfSchema = StructType(
+    [
+        StructField("property_id", LongType(), False),
+        StructField("latitude", DoubleType(), True),
+        StructField("longitude", DoubleType(), True),
+        StructField("property_type", StringType(), True),
+        StructField("room_type", StringType(), True),
+        StructField("accommodates", IntegerType(), True),
+        StructField("bathrooms", DecimalType(), True),
+        StructField("beds", IntegerType(), True),
+        StructField("daily_price", DecimalType(10, 2), True),
+    ]
+)
+
+reviewsDiagnosticsDfSchema = StructType(
+    [
+        StructField("reviewsDiagnostics_id", LongType(), False),
+        StructField("number_of_reviews", IntegerType(), True),
+        StructField("number_of_reviews_ltm", IntegerType(), True),
+        StructField("number_of_reviews_l30d", IntegerType(), True),
+        StructField("first_review", DateType(), True),
+        StructField("last_review", DateType(), True),
+        StructField("review_scores_rating", IntegerType(), True),
+        StructField("review_scores_accuracy", IntegerType(), True),
+        StructField("review_scores_cleanliness", IntegerType(), True),
+        StructField("review_scores_checkin", IntegerType(), True),
+        StructField("review_scores_communication", IntegerType(), True),
+        StructField("review_scores_location", IntegerType(), True),
+        StructField("review_scores_value", IntegerType(), True),
+        StructField("reviews_per_month", DecimalType(10, 2), True),
+    ]
+)
+
+scrapingsDfSchema = StructType(
+    [
+        StructField("scraping_id", LongType(), False),
+        StructField("scrape_id", LongType(), True),
+        StructField("last_scraped", DateType(), True),
+        StructField("source", StringType(), True),
+    ]
+)
+
+neighbourhoodDfSchema = StructType(
+    [
+        StructField("neighbourhood_id", LongType(), False),
+        StructField("neighbourhood", StringType(), True),
+        StructField("neighbourhood_overview", StringType(), True),
+        StructField("neighbourhood_cleansed", StringType(), True),
+    ]
+)
+
+minMaxInsightsDfSchema = StructType(
+    [
+        StructField("minmax_insights_id", LongType(), False),
+        StructField("minimum_nights", IntegerType(), True),
+        StructField("maximum_nights", IntegerType(), True),
+        StructField("minimum_minimum_nights", IntegerType(), True),
+        StructField("maximum_minimum_nights", IntegerType(), True),
+        StructField("minimum_maximum_nights", IntegerType(), True),
+        StructField("maximum_maximum_nights", IntegerType(), True),
+        StructField("minimum_nights_avg_ntm", DoubleType(), True),
+        StructField("maximum_nights_avg_ntm", DoubleType(), True),
+    ]
+)
+
+availabilityDfSchema = StructType(
+    [
+        StructField("availability_id", LongType(), False),
+        StructField("has_availability", IntegerType(), True),
+        StructField("availability_30", IntegerType(), True),
+        StructField("availability_60", IntegerType(), True),
+        StructField("availability_90", IntegerType(), True),
+        StructField("availability_365", IntegerType(), True),
+    ]
+)
+
+logger.info("Validating Schemas Before Final Join...")
+
+try:
+    propertyDf.schema == (propertyDfSchema)
+    reviewsDiagnosticsDf.schema == (reviewsDiagnosticsDfSchema)
+    scrapingsDf.schema == (scrapingsDfSchema)
+    neighbourhoodDf.schema == (neighbourhoodDfSchema)
+    minMaxInsightsDf.schema == (minMaxInsightsDfSchema)
+    availabilityDf.schema == (availabilityDfSchema)
+except AnalysisException as e:
+    logger.error(f"Error Validating Schemas Before Final Join: {e}", exc_info=True)
+    raise e
+
+logger.info("Schemas Validated Before Final Join")
 
 logger.info("Joining Final Table...")
 
@@ -582,99 +705,146 @@ try:
         )
     )
 except Exception as e:  # Chance of error is unlikely, just in case I've put this
-    logger.info(f"Error {e}", exc_info=True)
+    logger.error(f"Error {e}", exc_info=True)
     raise e
 
 logger.info("Final Table Joined")
 
+logger.info("Validating Listings DataFrame After Join...")
+
+listingDfSchema = StructType(
+    [
+        StructField(
+            "listing_id", LongType(), False
+        ),  # Nullable because we did not run monotonically_increasing_id
+        StructField("scraping_id", LongType(), True),
+        StructField("host_id", LongType(), True),
+        StructField("neighbourhood_id", LongType(), True),
+        StructField("property_id", LongType(), True),
+        StructField("minmax_insights_id", LongType(), True),
+        StructField("avail_id", LongType(), True),
+        StructField("rev_diag_id", LongType(), True),
+        StructField("listing_url", StringType(), True),
+        StructField("name", StringType(), True),
+        StructField("picture_url", StringType(), True),
+        StructField("license", StringType(), True),
+        StructField("instant_bookable", IntegerType(), True),
+    ]
+)
+
+try:
+    listingDf.schema == (listingDfSchema)
+except AnalysisException as e:
+    logger.error(f"Error Validating Listings Schema: {e}", exc_info=True)
+    raise e
+
+logger.info("Listings Schema Validated After Join")
+
+logger.info("Spark Transformations Complete")
+
 logger.info("Converting Spark Dataframes to Glue Dynamic Frames...")
 
-# Converting Dataframes to Glue Dynamic Frames
-listingDf = DynamicFrame.fromDF(listingDf, glueContext, "listingDf")
-hostDf = DynamicFrame.fromDF(hostDf, glueContext, "hostDf")
-hostQualificationsDf = DynamicFrame.fromDF(
-    hostQualificationsDf, glueContext, "hostQualificationsDf"
-)
-hostListingsDiagsDf = DynamicFrame.fromDF(
-    hostListingsDiagsDf, glueContext, "hostListingsDiagsDf"
-)
-propertyDf = DynamicFrame.fromDF(propertyDf, glueContext, "propertyDf")
-reviewsDiagnosticsDf = DynamicFrame.fromDF(
-    reviewsDiagnosticsDf, glueContext, "reviewsDiagnosticsDf"
-)
-scrapingsDf = DynamicFrame.fromDF(scrapingsDf, glueContext, "scrapingsDf")
-neighbourhoodDf = DynamicFrame.fromDF(neighbourhoodDf, glueContext, "neighbourhoodDf")
-minMaxInsightsDf = DynamicFrame.fromDF(
-    minMaxInsightsDf, glueContext, "minMaxInsightsDf"
-)
-availabilityDf = DynamicFrame.fromDF(availabilityDf, glueContext, "availabilityDf")
+try:
+    # Converting Dataframes to Glue Dynamic Frames
+    listingDf = DynamicFrame.fromDF(listingDf, glueContext, "listingDf")
+    hostDf = DynamicFrame.fromDF(hostDf, glueContext, "hostDf")
+    hostQualificationsDf = DynamicFrame.fromDF(
+        hostQualificationsDf, glueContext, "hostQualificationsDf"
+    )
+    hostListingsDiagsDf = DynamicFrame.fromDF(
+        hostListingsDiagsDf, glueContext, "hostListingsDiagsDf"
+    )
+    propertyDf = DynamicFrame.fromDF(propertyDf, glueContext, "propertyDf")
+    reviewsDiagnosticsDf = DynamicFrame.fromDF(
+        reviewsDiagnosticsDf, glueContext, "reviewsDiagnosticsDf"
+    )
+    scrapingsDf = DynamicFrame.fromDF(scrapingsDf, glueContext, "scrapingsDf")
+    neighbourhoodDf = DynamicFrame.fromDF(
+        neighbourhoodDf, glueContext, "neighbourhoodDf"
+    )
+    minMaxInsightsDf = DynamicFrame.fromDF(
+        minMaxInsightsDf, glueContext, "minMaxInsightsDf"
+    )
+    availabilityDf = DynamicFrame.fromDF(availabilityDf, glueContext, "availabilityDf")
+
+except Exception as e:  # Chance of error is unlikely, just in case I've put this
+    logger.error(
+        f"Error Converting Spark Dataframes to Glue Dynamic Frames: {e}", exc_info=True
+    )
+    raise e
 
 logger.info("Dynamic Frames Created")
 
 
-logger.info("Writing Dynamic Framces to Redshift...")
+logger.info("Writing Dynamic Frames to Redshift...")
 
 # Writing to Redshift
-glueContext.write_dynamic_frame.from_catalog(
-    frame=listingDf,
-    database="airbnb_transformed_data",
-    table="transformed_listings_data_public_listings",
-)
 
-glueContext.write_dynamic_frame.from_catalog(
-    frame=hostDf,
-    database="airbnb_transformed_data",
-    table="transformed_listings_data_public_host",
-)
+try:
+    glueContext.write_dynamic_frame.from_catalog(
+        frame=listingDf,
+        database="airbnb_transformed_data",
+        table="transformed_listings_data_public_listings",
+    )
 
-glueContext.write_dynamic_frame.from_catalog(
-    frame=hostQualificationsDf,
-    database="airbnb_transformed_data",
-    table="transformed_listings_data_public_hqad",
-)
+    glueContext.write_dynamic_frame.from_catalog(
+        frame=hostDf,
+        database="airbnb_transformed_data",
+        table="transformed_listings_data_public_host",
+    )
 
-glueContext.write_dynamic_frame.from_catalog(
-    frame=hostListingsDiagsDf,
-    database="airbnb_transformed_data",
-    table="transformed_listings_data_public_hld",
-)
+    glueContext.write_dynamic_frame.from_catalog(
+        frame=hostQualificationsDf,
+        database="airbnb_transformed_data",
+        table="transformed_listings_data_public_hqad",
+    )
 
-glueContext.write_dynamic_frame.from_catalog(
-    frame=propertyDf,
-    database="airbnb_transformed_data",
-    table="transformed_listings_data_public_property",
-)
+    glueContext.write_dynamic_frame.from_catalog(
+        frame=hostListingsDiagsDf,
+        database="airbnb_transformed_data",
+        table="transformed_listings_data_public_hld",
+    )
 
-glueContext.write_dynamic_frame.from_catalog(
-    frame=reviewsDiagnosticsDf,
-    database="airbnb_transformed_data",
-    table="transformed_listings_data_public_reviews_diagnostics",
-)
+    glueContext.write_dynamic_frame.from_catalog(
+        frame=propertyDf,
+        database="airbnb_transformed_data",
+        table="transformed_listings_data_public_property",
+    )
 
-glueContext.write_dynamic_frame.from_catalog(
-    frame=scrapingsDf,
-    database="airbnb_transformed_data",
-    table="transformed_listings_data_public_scrapings",
-)
+    glueContext.write_dynamic_frame.from_catalog(
+        frame=reviewsDiagnosticsDf,
+        database="airbnb_transformed_data",
+        table="transformed_listings_data_public_reviews_diagnostics",
+    )
 
-glueContext.write_dynamic_frame.from_catalog(
-    frame=neighbourhoodDf,
-    database="airbnb_transformed_data",
-    table="transformed_listings_data_public_neighbourhoods",
-)
+    glueContext.write_dynamic_frame.from_catalog(
+        frame=scrapingsDf,
+        database="airbnb_transformed_data",
+        table="transformed_listings_data_public_scrapings",
+    )
 
-glueContext.write_dynamic_frame.from_catalog(
-    frame=minMaxInsightsDf,
-    database="airbnb_transformed_data",
-    table="transformed_listings_data_public_minmax_insights",
-)
+    glueContext.write_dynamic_frame.from_catalog(
+        frame=neighbourhoodDf,
+        database="airbnb_transformed_data",
+        table="transformed_listings_data_public_neighbourhoods",
+    )
 
-glueContext.write_dynamic_frame.from_catalog(
-    frame=availabilityDf,
-    database="airbnb_transformed_data",
-    table="transformed_listings_data_public_availability_info",
-)
+    glueContext.write_dynamic_frame.from_catalog(
+        frame=minMaxInsightsDf,
+        database="airbnb_transformed_data",
+        table="transformed_listings_data_public_minmax_insights",
+    )
 
-logger.info("Finished")
+    glueContext.write_dynamic_frame.from_catalog(
+        frame=availabilityDf,
+        database="airbnb_transformed_data",
+        table="transformed_listings_data_public_availability_info",
+    )
+
+except Exception as e:  # Chance of error is unlikely, just in case I've put this
+    logger.error(f"Error Writing Dynamic Frames to Redshift: {e}", exc_info=True)
+    raise e
+
+logger.info("Dynamic Frames Written to Redshift")
 
 logger.info("Job Complete")
