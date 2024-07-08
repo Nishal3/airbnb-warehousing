@@ -47,7 +47,7 @@ def t_f_to_1_0(t_f):
 args = getResolvedOptions(sys.argv, ["JOB_NAME"])
 
 # Creating SparkContext and GlueContext
-sc = SparkContext.getOrCreate()
+sc = SparkContext()
 glueContext = GlueContext(sc)
 
 # Initializing Glue Logger
@@ -846,5 +846,7 @@ except Exception as e:  # Chance of error is unlikely, just in case I've put thi
     raise e
 
 logger.info("Dynamic Frames Written to Redshift")
+
+job.commit()
 
 logger.info("Job Complete")

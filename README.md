@@ -8,6 +8,11 @@ We are starting off with loading data into RDS to emulate a real-world scenario:
 
 ## 1 Creating The RDS Instance
 
+Video Demonstration:
+<video src="https://dqkl9myp5qci5.cloudfront.net/project_videos/Airbnb_RDS_Setup.mp4" width="640" height="480" controls></video>
+
+**_Note_**: In the next video, I will use another availability zone. **Make sure you use the same availability zone throughout the entire process!**
+
 ### 1.1 Finding RDS and Setting up Free Tier
 
 1. Log into AWS and search for RDS
@@ -21,7 +26,7 @@ We are starting off with loading data into RDS to emulate a real-world scenario:
 2. Make a master username or leave it as admin
 3. Click "Self managed" for credentials management and enter a password for your database
 
-### 1.3 Setting up EC2 Connection
+### 1.3 Setting up EC2 Connection and Creating RDS Instance
 
 1. Now click "Set up EC2 connection" and choose "Connect to an EC2 compute resource"
 2. If you have not made an EC2 instance for this separately, click "Create EC2 instance"
