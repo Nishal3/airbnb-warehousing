@@ -12,7 +12,8 @@ from pyspark.sql.types import (
     DoubleType,
     DateType,
 )
-from pyspark.errors import AnalysisException
+
+# from pyspark.errors import AnalysisException # Most common error for our script, but AWS Glue does not support it
 from pyspark.sql.types import StructField, StructType
 from awsglue.context import GlueContext
 from awsglue.dynamicframe import DynamicFrame
@@ -208,7 +209,7 @@ logger.info("Transforming Listings Table With SQL...")
 
 try:
     listingDf = spark.sql(listingDfQuery)
-except AnalysisException as e:  # Most common error, failed to analyze SQL query
+except Exception as e:
     logger.error(f"Error transforming listings table with SQL: {e}", exc_info=True)
     # Keep note we don't have to stop the SparkContext, Glue manages that itself
     raise e
@@ -473,7 +474,7 @@ try:
     hostQualificationsDf.schema == (hostQualificationsSchema)
     hostListingsDiagsDf.schema == (hostListingsDiagsSchema)
 
-except AnalysisException as e:
+except Exception as e:
     logger.error(f"Error validating host schema: {e}", exc_info=True)
     raise e
 
@@ -531,7 +532,7 @@ hostSchema = StructType(
 
 try:
     hostDf.schema == (hostSchema)
-except AnalysisException as e:
+except Exception as e:
     logger.error(f"Error Validating Host Schema: {e}", exc_info=True)
     raise e
 
@@ -659,7 +660,7 @@ try:
     neighbourhoodDf.schema == (neighbourhoodDfSchema)
     minMaxInsightsDf.schema == (minMaxInsightsDfSchema)
     availabilityDf.schema == (availabilityDfSchema)
-except AnalysisException as e:
+except Exception as e:
     logger.error(f"Error Validating Schemas Before Final Join: {e}", exc_info=True)
     raise e
 
@@ -734,7 +735,7 @@ listingDfSchema = StructType(
 
 try:
     listingDf.schema == (listingDfSchema)
-except AnalysisException as e:
+except Exception as e:
     logger.error(f"Error Validating Listings Schema: {e}", exc_info=True)
     raise e
 
