@@ -9,7 +9,7 @@ We are starting off with loading data into RDS to emulate a real-world scenario:
 ## 1 Creating The RDS Instance
 
 Video Demonstration:
-<video src="https://dqkl9myp5qci5.cloudfront.net/project_videos/Airbnb_Project_RDS_Setup.mp4" width="640" height="480" controls></video>
+https://dqkl9myp5qci5.cloudfront.net/project_videos/Airbnb_Project_RDS_Setup.mp4
 
 ### 1.1 Finding RDS and Setting up Free Tier
 
@@ -231,7 +231,8 @@ Download the transformation file before continuing. Go to [ this link ][transfor
 1. Navigate to the Glue console
 2. Click "ETL jobs" on the left menu
 3. Click "Script editor" and click "Upload script"
-4. Select the python file in the `listings_transformations/glue_script/listings_glue_transform.py`
+4. If you downloaded the repo, select the python file in the `listings_transformations/glue_script/` folder if you have not separately downloaded it, if you separately downloaded it, select that.
+5.
 
 ## Data and Creative Commons Liscense for Data
 
