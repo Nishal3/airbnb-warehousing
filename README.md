@@ -247,13 +247,13 @@ Select the crawlers and hit "Run". And now, we've fetched the column metadata fo
 3. Assign the bucket a globally unique name. Usually you can get away with using a description followed by your name
 4. Leave everything default and click "Create bucket"
 
-#### 5.3.2 Running Test Queries in Amazon Athena
+<!-- #### 5.3.2 Running Test Queries in Amazon Athena
 
 1. Navigate to Athena
 2. In the popup that says to set up a query result location in S3, hit "Edit settings"
 3. Browse S3 to find your bucket
 4. Hit "Save"
-5. In the query editor, run the query: `SELECT * FROM columbus_oh_listings limit 5`, now we can preview our data in Athena!
+5. In the query editor, run the query: `SELECT * FROM columbus_oh_listings limit 5`, now we can preview our data in Athena! -->
 
 ## 6 Running a Glue Job to Transform RDS Listings Data and Move it to Redshift
 
