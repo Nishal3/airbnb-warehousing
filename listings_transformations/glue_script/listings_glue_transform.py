@@ -55,7 +55,7 @@ glueContext = GlueContext(sc)
 logger = glueContext.get_logger()
 
 # Creating SparkSession and Job
-spark = GlueContext.spark_session
+spark = glueContext.spark_session
 job = Job(glueContext)
 
 # Initializing Job
@@ -73,7 +73,7 @@ try:
         transformation_ctx="RDSdata",
     )
 except Exception as e:
-    logger.error(f"Error creating DynamicFrame from RDS: {e}", exc_info=True)
+    logger.error(f"Error creating DynamicFrame from RDS: {e}")
     raise e
 
 logger.info("Created DynamicFrame from RDS")
@@ -210,13 +210,9 @@ logger.info("Transforming Listings Table With SQL...")
 try:
     listingDf = spark.sql(listingDfQuery)
 except Exception as e:
-    logger.error(f"Error transforming listings table with SQL: {e}", exc_info=True)
+    logger.error(f"Error transforming listings table with SQL: {e}")
     # Keep note we don't have to stop the SparkContext, Glue manages that itself
     raise e
-except Exception as e:  # Any other error
-    logger.error(f"Error transforming listings table with SQL: {e}", exc_info=True)
-    raise e
-
 
 logger.info("Transformed Listings Table With SQL")
 
@@ -475,7 +471,7 @@ try:
     hostListingsDiagsDf.schema == (hostListingsDiagsSchema)
 
 except Exception as e:
-    logger.error(f"Error validating host schema: {e}", exc_info=True)
+    logger.error(f"Error validating host schema: {e}")
     raise e
 
 logger.info("Host Schemas Validated")
@@ -505,7 +501,7 @@ try:
         )
     )
 except Exception as e:  # Chance of error is unlikely, just in case I've put this
-    logger.error(f"Error: {e}", exc_info=True)
+    logger.error(f"Error: {e}")
     raise e
 
 logger.info("Host Tables Joined")
@@ -533,7 +529,7 @@ hostSchema = StructType(
 try:
     hostDf.schema == (hostSchema)
 except Exception as e:
-    logger.error(f"Error Validating Host Schema: {e}", exc_info=True)
+    logger.error(f"Error Validating Host Schema: {e}")
     raise e
 
 logger.info("Host Table Schema After Join Validated")
@@ -661,7 +657,7 @@ try:
     minMaxInsightsDf.schema == (minMaxInsightsDfSchema)
     availabilityDf.schema == (availabilityDfSchema)
 except Exception as e:
-    logger.error(f"Error Validating Schemas Before Final Join: {e}", exc_info=True)
+    logger.error(f"Error Validating Schemas Before Final Join: {e}")
     raise e
 
 logger.info("Schemas Validated Before Final Join")
@@ -706,7 +702,7 @@ try:
         )
     )
 except Exception as e:  # Chance of error is unlikely, just in case I've put this
-    logger.error(f"Error {e}", exc_info=True)
+    logger.error(f"Error {e}")
     raise e
 
 logger.info("Final Table Joined")
@@ -736,7 +732,7 @@ listingDfSchema = StructType(
 try:
     listingDf.schema == (listingDfSchema)
 except Exception as e:
-    logger.error(f"Error Validating Listings Schema: {e}", exc_info=True)
+    logger.error(f"Error Validating Listings Schema: {e}")
     raise e
 
 logger.info("Listings Schema Validated After Join")
@@ -769,9 +765,7 @@ try:
     availabilityDf = DynamicFrame.fromDF(availabilityDf, glueContext, "availabilityDf")
 
 except Exception as e:  # Chance of error is unlikely, just in case I've put this
-    logger.error(
-        f"Error Converting Spark Dataframes to Glue Dynamic Frames: {e}", exc_info=True
-    )
+    logger.error(f"Error Converting Spark Dataframes to Glue Dynamic Frames: {e}")
     raise e
 
 logger.info("Dynamic Frames Created")
@@ -843,7 +837,7 @@ try:
     )
 
 except Exception as e:  # Chance of error is unlikely, just in case I've put this
-    logger.error(f"Error Writing Dynamic Frames to Redshift: {e}", exc_info=True)
+    logger.error(f"Error Writing Dynamic Frames to Redshift: {e}")
     raise e
 
 logger.info("Dynamic Frames Written to Redshift")

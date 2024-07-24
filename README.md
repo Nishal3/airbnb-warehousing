@@ -2,14 +2,28 @@
 
 ![ visual ]
 
-## Data Loading
+## Description and Overview of Airbnb Listings Warehousing Project
 
-We are starting off with loading data into RDS to emulate a real-world scenario: data is already in an RDS instance and we need to perform an ETL to move it to Redshift. We have airbnb data about the listings and want to store it into a data warehouse after running some sort of transformation. Finally, we make a dashboard using Tableau to finalize the project.
+We will start off with loading data into RDS to emulate a real-world scenario: data is already in an RDS instance and we need to perform an ETL to move it to Redshift. We have airbnb data about listings and want to store it in a data warehouse after running some sort of transformation. Finally, we make a dashboard using Tableau to finalize the project.
+
+**A High-Level Overview**
+
+1. Set-up RDS, EC2 connector to RDS, and Redshift Serverless
+2. Use EC2 connector to load data into RDS (in the real world, data would already be in RDS, we are setting up for a real-world circumstance)
+3. Set up an IAM role for Glue
+4. Set up S3 Gateway for Glue connector
+5. Set up Database, connector and crawler in Glue
+6. Run crawler and create job script
+7. Trigger job script
+8. Set up a dashboard using Tableau sourcing data from Redshift
+
+## Preconfiguration and Data Loading
+
+This marks the start of the tutorial. We start with preconfiguring RDS and then loading data into it. Then we preconfigure Redshift.
 
 ## 1 Creating The RDS Instance
 
-Video Demonstration:
-https://dqkl9myp5qci5.cloudfront.net/project_videos/Airbnb_Project_RDS_Setup.mp4
+First we will load data into the RDS instance, but before even that we need to create the RDS instance and EC2 connector instance
 
 ### 1.1 Finding RDS and Setting up Free Tier
 
@@ -39,7 +53,8 @@ https://dqkl9myp5qci5.cloudfront.net/project_videos/Airbnb_Project_RDS_Setup.mp4
 
 **Make sure you don't delete the downloaded key pair. We might need it later to get into the EC2 instance**
 
-Now preconfiguration for RDS is complete!
+Now preconfiguration for RDS is complete! The details should look something like this:
+![ RDS_config ]
 
 ## 2 Loading Our Data Into RDS
 
@@ -59,10 +74,10 @@ Now preconfiguration for RDS is complete!
    1. Get the download file: `sudo wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm`
    2. Make sure the file is there by running `ls`
    3. Installing the file: `sudo dnf install mysql80-community-release-el9-1.noarch.rpm -y`
-   4. Run `sudo yum update` and `sudo yum upgrade` so that the installed file is recognized
+   4. Run `sudo yum update` so that the installed file is recognized
    5. Installing MySQL: `sudo dnf install mysql-community-server -y`
    6. Starting MySQL: `sudo systemctl start mysqld`
-2. Make sure you are at the home directory, just run the command `cd` to make sure of that
+2. Make sure you are at the home directory, run the command `cd` to make sure of that
 3. To download the CSV file run `curl -O https://raw.githubusercontent.com/Nishal3/airbnb-warehousing/main/data/listings.csv`
 
 ### 2.3 Entering and Loading Data Into RDS
@@ -83,7 +98,11 @@ Now preconfiguration for RDS is complete!
 
 7. Load data into the table by copying and pasting the `RDS_data_load_script.sql` script and running it
 
-**Now we've loaded our "pre-existing" database!**
+**Now we've loaded our "pre-existing" database!** It the outputs for both of these should look like this:  
+![ EC2_table_creation_and_load_output ]
+
+And if you want, you can run a simple select statement and describe the table as well. If you do it should look like this:  
+![ rds_data_outputs ]
 
 ## 3 Redshift Serverless Configuration and Table Creation
 
@@ -102,14 +121,17 @@ Now preconfiguration for RDS is complete!
 
 1. Get into the query editor by clicking "Query editor v2" on the left menu
 2. Create the database by clicking the "Create" which has a plus and click "Database"
-3. Paste this in as the name: "transformed_columbus_oh_listings_data", or name it yourself, be sure to remember the DB name though
+3. Paste this in as the name: "transformed_columbus_oh_listings_data", or name it yourself, be sure to remember the DB name and apply it where the given name is used!
 4. For "Users and groups", have the database user be "admin", then click "Create database"
 5. In the query editor, click the second dropdown, it should have "dev" on it, and select the database we just created
 6. Create the tables by pasting in the SQL Script from the `table_creation.sql` file, and click "Run"
 
-## ETL Using AWS Glue
+Now if you open up the folder "transformed_columbus_oh_listings_data/public/Tables/" you should see the newly created tables. Here's what it should look like:
+![ redshift_table_creation ]
 
-This marks the start of set-up and usage of AWS Glue to extract, transform, and load the data stored in the RDS instance.
+## ETL Using AWS Glue and Querying with Athena
+
+This marks the start of set-up and usage of AWS Glue to extract, transform, and load the data stored in the RDS instance. We will also use Athena to query the data from RDS and Redshift using the Glue data catalog.
 
 ## 4 Creating a Connector to the RDS Instance and Redshift Serverless
 
@@ -195,6 +217,8 @@ Now we've set up databases in Glue Catalog!
 
 Crawlers don't actually copy the data into Glue. They collect metadata about the data and store in the Glue Catalog. The data stores we "extract data" [not actual data, just metadata] from are stored in a Glue database. Refer to the [ official docs ][ official_glue_docs ] for more info.
 
+#### 5.2.1 RDS Crawler
+
 1. Go to the Glue console and click "Crawlers" on the left menu
 2. Hit "Create crawler" and give it a fitting name and description
 3. Hit "Next" and click "Add a data source"
@@ -204,10 +228,17 @@ Crawlers don't actually copy the data into Glue. They collect metadata about the
 7. Click "Next" and choose the IAM role we created before. Proceed by clicking "Next"
 8. For the target database, choose the database we made in Glue for the untransformed data and click "Next"
 9. Click "Create crawler"
-10. Rinse and repeat for Redshift assigning meaningful names and using the connection and database in Glue associating with Redshift. The only thing different is the data source's path, which is now "transformed_columbus_oh_listings_data/%"
-11. Select the crawlers and hit "Run". And now, we've fetched the column metadata for both data source and target!
+   Here's how it might look:
 
-### 5.3 Previewing Data with Amazon Athena
+#### 5.2.2 Redshift Crawler
+
+1. Rinse and repeat for Redshift assigning meaningful names and using the connection and database in Glue associating with Redshift. The only thing different is the data source's path, which is now "transformed_columbus_oh_listings_data/%"
+
+Here's how it might look:
+
+Select the crawlers and hit "Run". And now, we've fetched the column metadata for both data source and target!
+
+### 5.3 Previewing RDS Data with Amazon Athena
 
 #### 5.3.1 Creating an S3 Bucket to Store Query Results
 
@@ -243,6 +274,10 @@ Creative commons liscense for data: [Liscense][creative_liscense]
 <!-- Images  -->
 
 [ visual ]: https://dqkl9myp5qci5.cloudfront.net/airbnb_listings_etl_visual.png
+[ RDS_config ]: https://dqkl9myp5qci5.cloudfront.net/RDS_config.png
+[ rds_data_outputs ]: https://dqkl9myp5qci5.cloudfront.net/RDS_data_select_describe_output.png
+[ EC2_table_creation_and_load_output ]: https://dqkl9myp5qci5.cloudfront.net/EC2_table_creation_data_load_outputs.png
+[ redshift_table_creation ]: https://dqkl9myp5qci5.cloudfront.net/Redshift_table_creation.png
 
 <!-- Airbnb Data -->
 
