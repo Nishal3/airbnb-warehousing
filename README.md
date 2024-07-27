@@ -6,7 +6,9 @@
 
 We will start off with loading data into RDS to emulate a real-world scenario: data is already in an RDS instance and we need to perform an ETL to move it to Redshift. We have airbnb data about listings and want to store it in a data warehouse after running some sort of transformation. Finally, we make a dashboard using Tableau to finalize the project.
 
-**A High-Level Overview**
+I recommend downloading this repo and copying things from the downloaded files. You could also copy and paste directly from GitHub, you're free to pick your poison.
+
+**A High-Level Overview:**
 
 1. Set-up RDS, EC2 connector to RDS, and Redshift Serverless
 2. Use EC2 connector to load data into RDS (in the real world, data would already be in RDS, we are setting up for a real-world circumstance)
@@ -15,7 +17,7 @@ We will start off with loading data into RDS to emulate a real-world scenario: d
 5. Set up Database, connector and crawler in Glue
 6. Run crawler and create job script
 7. Trigger job script
-8. Set up a dashboard using Tableau sourcing data from Redshift
+8. Set up a dashboard using Tableau using the data from Redshift
 
 ## Preconfiguration and Data Loading
 
@@ -215,6 +217,8 @@ Now we've set up databases in Glue Catalog!
 
 ### 5.2 Creating a Crawler to Get the Blueprint of the Data for Both RDS and Redshfit
 
+**Expect to get an ~$0.20 bill after running these crawlers, Glue Crawlers are not an offered service for free tier**
+
 Crawlers don't actually copy the data into Glue. They collect metadata about the data and store in the Glue Catalog. The data stores we "extract data" [not actual data, just metadata] from are stored in a Glue database. Refer to the [ official docs ][ official_glue_docs ] for more info.
 
 #### 5.2.1 RDS Crawler
@@ -238,24 +242,11 @@ Here's how it might look:
 
 Select the crawlers and hit "Run". And now, we've fetched the column metadata for both data source and target!
 
-### 5.3 Previewing RDS Data with Amazon Athena
+## 5 Running a Glue Job to Transform RDS Listings Data and Move it to Redshift
 
-#### 5.3.1 Creating an S3 Bucket to Store Query Results
+### 5.1 Configuring Job Script
 
-1. Navigate to S3
-2. Create a bucket to store query results by clicking "Create bucket"
-3. Assign the bucket a globally unique name. Usually you can get away with using a description followed by your name
-4. Leave everything default and click "Create bucket"
-
-<!-- #### 5.3.2 Running Test Queries in Amazon Athena
-
-1. Navigate to Athena
-2. In the popup that says to set up a query result location in S3, hit "Edit settings"
-3. Browse S3 to find your bucket
-4. Hit "Save"
-5. In the query editor, run the query: `SELECT * FROM columbus_oh_listings limit 5`, now we can preview our data in Athena! -->
-
-## 6 Running a Glue Job to Transform RDS Listings Data and Move it to Redshift
+**After running the job, expect a ~$0.20 bill. Running Glue jobs are also not an offered service for AWS free tier**
 
 Download the transformation file before continuing. Go to [ this link ][transformation_file] and click the download button if you have not already downloaded this repo.
 
@@ -263,7 +254,12 @@ Download the transformation file before continuing. Go to [ this link ][transfor
 2. Click "ETL jobs" on the left menu
 3. Click "Script editor" and click "Upload script"
 4. If you downloaded the repo, select the python file in the `listings_transformations/glue_script/` folder if you have not separately downloaded it, if you separately downloaded it, select that.
-5.
+5. In the "Job details" section give a fitting name and description, then choose the Glue IAM role we made for this project
+6. Scroll down and change the "Requested number of workers" to 2. You can leave it 10, but you might get a heftier bill
+7. Edit the "Job timeout" option to be 10 minutes as well. We don't want to be racking up a huge AWS bill!
+8. Drop down "Advanced properties" and scroll down until you see "Connections"; here we will attatch the two connections we made, the RDS connector and the Redshift connector
+9. Click "Choose options" and select the two connections we've made
+10. Hit save up at the top right and
 
 ## Data and Creative Commons Liscense for Data
 

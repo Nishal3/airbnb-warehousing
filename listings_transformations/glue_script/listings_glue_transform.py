@@ -205,8 +205,6 @@ listingDfQuery = """
                     FROM listings_df_view
 """
 
-logger.info("Transforming Listings Table With SQL...")
-
 try:
     listingDf = spark.sql(listingDfQuery)
 except Exception as e:
@@ -299,7 +297,7 @@ hostQualificationsDf = hostQualificationsDf.dropDuplicates()
 
 # Assigning ID
 hostQualificationsDf = hostQualificationsDf.withColumn(
-    "hostQualifications_id", monotonically_increasing_id()
+    "host_quals_diags_id", monotonically_increasing_id()
 )
 
 # hostListingsDiagsDf
@@ -314,7 +312,7 @@ hostListingsDiagsDf = hostListingsDiagsDf.dropDuplicates()
 
 # Assigning ID
 hostListingsDiagsDf = hostListingsDiagsDf.withColumn(
-    "hostListingsDiags_id", monotonically_increasing_id()
+    "host_listings_diags_id", monotonically_increasing_id()
 )
 
 # Property Table
@@ -440,7 +438,7 @@ logger.info("Validating Host Table Schemas...")
 
 hostQualificationsSchema = StructType(
     [
-        StructField("hostQualifications_id", IntegerType(), False),
+        StructField("host_quals_diags_id", IntegerType(), False),
         StructField("host_response_time", StringType(), True),
         StructField("host_response_rate", StringType(), True),
         StructField("host_acceptance_rate", StringType(), True),
@@ -455,7 +453,7 @@ hostQualificationsSchema = StructType(
 
 hostListingsDiagsSchema = StructType(
     [
-        StructField("hostListingsDiags_id", IntegerType(), False),
+        StructField("host_listings_diags_id", IntegerType(), False),
         StructField("calculated_host_listings_count", IntegerType(), True),
         StructField("calculated_host_listings_count_entire_homes", IntegerType(), True),
         StructField(
@@ -488,8 +486,8 @@ try:
         )
         .select(
             "host_id",
-            "hostQualifications_id",
-            "hostListingsDiags_id",
+            "host_quals_diags_id",
+            "host_listings_diags_id",
             "host_url",
             "host_name",
             "host_since",
@@ -513,8 +511,8 @@ hostSchema = StructType(
         StructField(
             "host_id", LongType(), True
         ),  # Nullable is True because we did not run monotonically_increasing_id
-        StructField("hostQualifications_id", IntegerType(), True),
-        StructField("hostListingsDiags_id", IntegerType(), True),
+        StructField("host_quals_diags_id", IntegerType(), True),
+        StructField("host_listings_diags_id", IntegerType(), True),
         StructField("host_url", StringType(), True),
         StructField("host_name", StringType(), True),
         StructField("host_since", DateType(), True),
@@ -777,64 +775,75 @@ logger.info("Writing Dynamic Frames to Redshift...")
 
 try:
     glueContext.write_dynamic_frame.from_catalog(
-        frame=listingDf,
-        database="airbnb_transformed_data",
-        table="transformed_listings_data_public_listings",
-    )
-
-    glueContext.write_dynamic_frame.from_catalog(
-        frame=hostDf,
-        database="airbnb_transformed_data",
-        table="transformed_listings_data_public_host",
-    )
-
-    glueContext.write_dynamic_frame.from_catalog(
         frame=hostQualificationsDf,
         database="airbnb_transformed_data",
-        table="transformed_listings_data_public_hqad",
+        table_name="transformed_columbus_oh_listings_data_public_host_quals_diags",
+        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=hostListingsDiagsDf,
         database="airbnb_transformed_data",
-        table="transformed_listings_data_public_hld",
+        table_name="transformed_columbus_oh_listings_data_public_host_listings_diags",
+        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=propertyDf,
         database="airbnb_transformed_data",
-        table="transformed_listings_data_public_property",
+        table_name="transformed_columbus_oh_listings_data_public_property",
+        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=reviewsDiagnosticsDf,
         database="airbnb_transformed_data",
-        table="transformed_listings_data_public_reviews_diagnostics",
+        table_name="transformed_columbus_oh_listings_data_public_reviews_diagnostics",
+        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=scrapingsDf,
         database="airbnb_transformed_data",
-        table="transformed_listings_data_public_scrapings",
+        table_name="transformed_columbus_oh_listings_data_public_scrapings",
+        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=neighbourhoodDf,
         database="airbnb_transformed_data",
-        table="transformed_listings_data_public_neighbourhoods",
+        table_name="transformed_columbus_oh_listings_data_public_neighbourhoods",
+        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=minMaxInsightsDf,
         database="airbnb_transformed_data",
-        table="transformed_listings_data_public_minmax_insights",
+        table_name="transformed_columbus_oh_listings_data_public_minmax_insights",
+        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=availabilityDf,
         database="airbnb_transformed_data",
-        table="transformed_listings_data_public_availability_info",
+        table_name="transformed_columbus_oh_listings_data_public_availability_info",
+        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
     )
+
+    glueContext.write_dynamic_frame.from_catalog(
+        frame=hostDf,
+        database="airbnb_transformed_data",
+        table_name="transformed_columbus_oh_listings_data_public_host",
+        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
+    )
+
+    glueContext.write_dynamic_frame.from_catalog(
+        frame=listingDf,
+        database="airbnb_transformed_data",
+        table_name="transformed_columbus_oh_listings_data_public_listings",
+        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
+    )
+
 
 except Exception as e:  # Chance of error is unlikely, just in case I've put this
     logger.error(f"Error Writing Dynamic Frames to Redshift: {e}")

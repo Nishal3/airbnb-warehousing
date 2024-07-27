@@ -2,13 +2,13 @@ CREATE TABLE IF NOT EXISTS scrapings (
     scraping_id BIGINT PRIMARY KEY,
     scrape_id BIGINT,
     last_scraped DATE,
-    source INT
+    source VARCHAR(20)
 );
 
 CREATE TABLE IF NOT EXISTS neighbourhoods (
     neighbourhood_id BIGINT PRIMARY KEY,
     neighbourhood VARCHAR(30),
-    neighbourhood_overview TEXT,
+    neighbourhood_overview VARCHAR(2000),
     neighbourhood_cleansed VARCHAR(255)
 );
 
@@ -33,16 +33,16 @@ CREATE TABLE IF NOT EXISTS availability_info (
     availability_365 INT
 );
 
-CREATE TABLE IF NOT EXISTS hld (
-    hld_id BIGINT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS host_listings_diags (
+    host_listings_diags_id BIGINT PRIMARY KEY,
     calculated_host_listings_count INT,
     calculated_host_listings_count_entire_homes INT,
     calculated_host_listings_count_private_rooms INT,
     calculated_host_listings_count_shared_rooms INT
 );
 
-CREATE TABLE IF NOT EXISTS hqad (
-    hqad_id BIGINT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS host_quals_diags (
+    host_quals_id BIGINT PRIMARY KEY,
     host_response_time VARCHAR(2),
     host_response_rate NUMERIC(3, 2),
     host_acceptance_rate NUMERIC(3, 2),
@@ -56,8 +56,8 @@ CREATE TABLE IF NOT EXISTS hqad (
 
 CREATE TABLE IF NOT EXISTS host (
     host_id BIGINT PRIMARY KEY,
-    hld_id INT,
-    hqad_id INT,
+    host_listings_diags_id INT,
+    host_quals_id INT,
     host_url VARCHAR(50),
     host_name VARCHAR(255),
     host_since DATE,
@@ -66,10 +66,10 @@ CREATE TABLE IF NOT EXISTS host (
     host_thumbnail_url VARCHAR(255),
     host_picture_url VARCHAR(255),
     host_neighbourhood VARCHAR(255),
-    FOREIGN KEY(hld_id) 
-        REFERENCES hld(hld_id),
-    FOREIGN KEY(hqad_id)
-        REFERENCES hqad(hqad_id)
+    FOREIGN KEY(host_listings_diags_id) 
+        REFERENCES host_listings_diags(host_listings_diags_id),
+    FOREIGN KEY(host_quals_id)
+        REFERENCES host_quals_diags(host_quals_id)
 );
 
 CREATE TABLE IF NOT EXISTS property (
@@ -80,9 +80,9 @@ CREATE TABLE IF NOT EXISTS property (
     room_type VARCHAR(100),
     accommodates INT,
     bathrooms NUMERIC(5, 1),
-    bathrooms_desc VARCHAR(50),
+    bathroom_desc VARCHAR(50),
     beds INT,
-    daily_price NUMERIC(8, 2)
+    daily_price NUMERIC(10, 2)
 );
 
 CREATE TABLE IF NOT EXISTS reviews_diagnostics (
