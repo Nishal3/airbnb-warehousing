@@ -141,8 +141,8 @@ listingDfQuery = """
                             WHEN 'a few days or more' THEN 'D+'
                             ELSE NULL
                         END AS host_response_time, 
-                        CAST(REPLACE(host_response_rate, '%', '') / 100 AS DECIMAL(3,2)) AS host_response_rate,
-                        CAST(REPLACE(host_acceptance_rate, '%', '') / 100 AS DECIMAL(3,2)) AS host_acceptance_rate,
+                        REPLACE(host_response_rate, '%', '') / 100 AS host_response_rate,
+                        REPLACE(host_acceptance_rate, '%', '') / 100 AS host_acceptance_rate,
                         host_is_superhost,
                         host_listings_count, 
                         host_total_listings_count, 
@@ -164,7 +164,7 @@ listingDfQuery = """
                             ELSE bathrooms_text
                         END as bathrooms,
                         beds,
-                        cast(replace(price, '$', '') as decimal(10,2)) as daily_price,
+                        REPLACE(price, '$', '') as daily_price,
                         number_of_reviews,
                         number_of_reviews_ltm,
                         number_of_reviews_l30d,
@@ -222,6 +222,99 @@ listingDf = listingDf.withColumn("bathroom_desc", property_baths_split.getItem(1
 listingDf = listingDf.withColumn(
     "bathrooms", property_baths_split.getItem(0).cast("decimal")
 )
+
+logger.info("Casting columns to correct data types...")
+
+# Casting columns to correct data types
+listingDf = listingDf.withColumns(
+    {
+        "listing_id": col("listing_id").cast(LongType()),
+        "host_id": col("host_id").cast(LongType()),
+        "host_url": col("host_url").cast(StringType()),
+        "host_name": col("host_name").cast(StringType()),
+        "host_since": col("host_since").cast(DateType()),
+        "host_location": col("host_location").cast(StringType()),
+        "host_about": col("host_about").cast(StringType()),
+        "host_thumbnail_url": col("host_thumbnail_url").cast(StringType()),
+        "host_picture_url": col("host_picture_url").cast(StringType()),
+        "host_neighbourhood": col("host_neighbourhood").cast(StringType()),
+        "host_response_time": col("host_response_time").cast(StringType()),
+        "host_response_rate": col("host_response_rate").cast(DecimalType(3, 2)),
+        "host_acceptance_rate": col("host_acceptance_rate").cast(DecimalType(3, 2)),
+        "host_is_superhost": col("host_is_superhost").cast(IntegerType()),
+        "host_listings_count": col("host_listings_count").cast(IntegerType()),
+        "host_total_listings_count": col("host_total_listings_count").cast(
+            IntegerType()
+        ),
+        "host_verifications": col("host_verifications").cast(StringType()),
+        "host_has_profile_pic": col("host_has_profile_pic").cast(IntegerType()),
+        "host_identity_verified": col("host_identity_verified").cast(IntegerType()),
+        "calculated_host_listings_count": col("calculated_host_listings_count").cast(
+            IntegerType()
+        ),
+        "calculated_host_listings_count_entire_homes": col(
+            "calculated_host_listings_count_entire_homes"
+        ).cast(IntegerType()),
+        "calculated_host_listings_count_private_rooms": col(
+            "calculated_host_listings_count_private_rooms"
+        ).cast(IntegerType()),
+        "calculated_host_listings_count_shared_rooms": col(
+            "calculated_host_listings_count_shared_rooms"
+        ).cast(IntegerType()),
+        "latitude": col("latitude").cast(DecimalType(18, 15)),
+        "longitude": col("longitude").cast(DecimalType(18, 15)),
+        "property_type": col("property_type").cast(StringType()),
+        "room_type": col("room_type").cast(StringType()),
+        "accommodates": col("accommodates").cast(IntegerType()),
+        "bathrooms": col("bathrooms").cast(DecimalType(5, 1)),
+        "bathrooms_desc": col("bathroom_desc").cast(StringType()),
+        "beds": col("beds").cast(IntegerType()),
+        "daily_price": col("daily_price").cast(DecimalType(10, 2)),
+        "number_of_reviews": col("number_of_reviews").cast(IntegerType()),
+        "number_of_reviews_ltm": col("number_of_reviews_ltm").cast(IntegerType()),
+        "number_of_reviews_l30d": col("number_of_reviews_l30d").cast(IntegerType()),
+        "first_review": col("first_review").cast(DateType()),
+        "last_review": col("last_review").cast(DateType()),
+        "review_scores_rating": col("review_scores_rating").cast(DecimalType(3, 2)),
+        "review_scores_accuracy": col("review_scores_accuracy").cast(DecimalType(3, 2)),
+        "review_scores_cleanliness": col("review_scores_cleanliness").cast(
+            DecimalType(3, 2)
+        ),
+        "review_scores_checkin": col("review_scores_checkin").cast(DecimalType(3, 2)),
+        "review_scores_communication": col("review_scores_communication").cast(
+            DecimalType(3, 2)
+        ),
+        "review_scores_location": col("review_scores_location").cast(DecimalType(3, 2)),
+        "review_scores_value": col("review_scores_value").cast(DecimalType(3, 2)),
+        "reviews_per_month": col("reviews_per_month").cast(DecimalType(3, 2)),
+        "scrape_id": col("scrape_id").cast(LongType()),
+        "last_scraped": col("last_scraped").cast(DateType()),
+        "source": col("source").cast(StringType()),
+        "neighbourhood": col("neighbourhood").cast(StringType()),
+        "neighbourhood_overview": col("neighbourhood_overview").cast(StringType()),
+        "neighbourhood_cleansed": col("neighbourhood_cleansed").cast(StringType()),
+        "maximum_nights": col("maximum_nights").cast(IntegerType()),
+        "minimum_nights": col("minimum_nights").cast(IntegerType()),
+        "minimum_minimum_nights": col("minimum_minimum_nights").cast(IntegerType()),
+        "maximum_minimum_nights": col("maximum_minimum_nights").cast(IntegerType()),
+        "minimum_maximum_nights": col("minimum_maximum_nights").cast(IntegerType()),
+        "maximum_maximum_nights": col("maximum_maximum_nights").cast(IntegerType()),
+        "minimum_nights_avg_ntm": col("minimum_nights_avg_ntm").cast(DecimalType()),
+        "maximum_nights_avg_ntm": col("maximum_nights_avg_ntm").cast(DecimalType()),
+        "has_availability": col("has_availability").cast(IntegerType()),
+        "availability_30": col("availability_30").cast(IntegerType()),
+        "availability_60": col("availability_60").cast(IntegerType()),
+        "availability_90": col("availability_90").cast(IntegerType()),
+        "availability_365": col("availability_365").cast(IntegerType()),
+        "listing_url": col("listing_url").cast(StringType()),
+        "name": col("name").cast(StringType()),
+        "picture_url": col("picture_url").cast(StringType()),
+        "license": col("license").cast(StringType()),
+        "instant_bookable": col("instant_bookable").cast(IntegerType()),
+    }
+)
+
+logger.info("Casted columns to correct data types")
 
 logger.info("Transforming Host Verifications...")
 # Transforming Host Verifications
@@ -297,7 +390,7 @@ hostQualificationsDf = hostQualificationsDf.dropDuplicates()
 
 # Assigning ID
 hostQualificationsDf = hostQualificationsDf.withColumn(
-    "host_quals_diags_id", monotonically_increasing_id()
+    "host_quals_id", monotonically_increasing_id()
 )
 
 # hostListingsDiagsDf
@@ -438,11 +531,11 @@ logger.info("Validating Host Table Schemas...")
 
 hostQualificationsSchema = StructType(
     [
-        StructField("host_quals_diags_id", IntegerType(), False),
+        StructField("host_quals_id", IntegerType(), False),
         StructField("host_response_time", StringType(), True),
-        StructField("host_response_rate", StringType(), True),
-        StructField("host_acceptance_rate", StringType(), True),
-        StructField("host_is_superhost", StringType(), True),
+        StructField("host_response_rate", DecimalType(3, 2), True),
+        StructField("host_acceptance_rate", DecimalType(3, 2), True),
+        StructField("host_is_superhost", IntegerType(), True),
         StructField("host_listings_count", IntegerType(), True),
         StructField("host_total_listings_count", IntegerType(), True),
         StructField("host_verifications", StringType(), True),
@@ -486,7 +579,7 @@ try:
         )
         .select(
             "host_id",
-            "host_quals_diags_id",
+            "host_quals_id",
             "host_listings_diags_id",
             "host_url",
             "host_name",
@@ -511,7 +604,7 @@ hostSchema = StructType(
         StructField(
             "host_id", LongType(), True
         ),  # Nullable is True because we did not run monotonically_increasing_id
-        StructField("host_quals_diags_id", IntegerType(), True),
+        StructField("host_quals_id", IntegerType(), True),
         StructField("host_listings_diags_id", IntegerType(), True),
         StructField("host_url", StringType(), True),
         StructField("host_name", StringType(), True),
@@ -572,12 +665,12 @@ minmax_join_conditions = [
 propertyDfSchema = StructType(
     [
         StructField("property_id", LongType(), False),
-        StructField("latitude", DoubleType(), True),
-        StructField("longitude", DoubleType(), True),
+        StructField("latitude", DecimalType(18, 15), True),
+        StructField("longitude", DecimalType(18, 15), True),
         StructField("property_type", StringType(), True),
         StructField("room_type", StringType(), True),
         StructField("accommodates", IntegerType(), True),
-        StructField("bathrooms", DecimalType(), True),
+        StructField("bathrooms", DecimalType(5, 1), True),
         StructField("beds", IntegerType(), True),
         StructField("daily_price", DecimalType(10, 2), True),
     ]
@@ -591,13 +684,13 @@ reviewsDiagnosticsDfSchema = StructType(
         StructField("number_of_reviews_l30d", IntegerType(), True),
         StructField("first_review", DateType(), True),
         StructField("last_review", DateType(), True),
-        StructField("review_scores_rating", IntegerType(), True),
-        StructField("review_scores_accuracy", IntegerType(), True),
-        StructField("review_scores_cleanliness", IntegerType(), True),
-        StructField("review_scores_checkin", IntegerType(), True),
-        StructField("review_scores_communication", IntegerType(), True),
-        StructField("review_scores_location", IntegerType(), True),
-        StructField("review_scores_value", IntegerType(), True),
+        StructField("review_scores_rating", DecimalType(3, 2), True),
+        StructField("review_scores_accuracy", DecimalType(3, 2), True),
+        StructField("review_scores_accuracy", DecimalType(3, 2), True),
+        StructField("review_scores_accuracy", DecimalType(3, 2), True),
+        StructField("review_scores_accuracy", DecimalType(3, 2), True),
+        StructField("review_scores_accuracy", DecimalType(3, 2), True),
+        StructField("review_scores_accuracy", DecimalType(3, 2), True),
         StructField("reviews_per_month", DecimalType(10, 2), True),
     ]
 )
@@ -629,8 +722,8 @@ minMaxInsightsDfSchema = StructType(
         StructField("maximum_minimum_nights", IntegerType(), True),
         StructField("minimum_maximum_nights", IntegerType(), True),
         StructField("maximum_maximum_nights", IntegerType(), True),
-        StructField("minimum_nights_avg_ntm", DoubleType(), True),
-        StructField("maximum_nights_avg_ntm", DoubleType(), True),
+        StructField("minimum_nights_avg_ntm", DecimalType(), True),
+        StructField("maximum_nights_avg_ntm", DecimalType(), True),
     ]
 )
 

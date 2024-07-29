@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS minmax_insights (
     maximum_minimum_nights INT,
     minimum_maximum_nights INT,
     maximum_maximum_nights INT,
-    minimum_nights_avg_ntm INT,
-    maximum_nights_avg_ntm INT
+    minimum_nights_avg_ntm NUMERIC,
+    maximum_nights_avg_ntm NUMERIC
 );
 
 CREATE TABLE IF NOT EXISTS availability_info (
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS host (
     host_name VARCHAR(255),
     host_since DATE,
     host_location VARCHAR(255),
-    host_about TEXT,
+    host_about VARCHAR(2000),
     host_thumbnail_url VARCHAR(255),
     host_picture_url VARCHAR(255),
     host_neighbourhood VARCHAR(255),
@@ -74,8 +74,8 @@ CREATE TABLE IF NOT EXISTS host (
 
 CREATE TABLE IF NOT EXISTS property (
     property_id BIGINT PRIMARY KEY,
-    latitude NUMERIC(8, 6),
-    longitude NUMERIC(8, 6),
+    latitude NUMERIC(18, 15),
+    longitude NUMERIC(18, 15),
     property_type VARCHAR(255),
     room_type VARCHAR(100),
     accommodates INT,
