@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS scrapings (
 
 CREATE TABLE IF NOT EXISTS neighbourhoods (
     neighbourhood_id BIGINT PRIMARY KEY,
-    neighbourhood VARCHAR(30),
+    neighbourhood VARCHAR(255),
     neighbourhood_overview VARCHAR(2000),
     neighbourhood_cleansed VARCHAR(255)
 );
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS host (
     host_name VARCHAR(255),
     host_since DATE,
     host_location VARCHAR(255),
-    host_about VARCHAR(2000),
+    host_about VARCHAR(10000),
     host_thumbnail_url VARCHAR(255),
     host_picture_url VARCHAR(255),
     host_neighbourhood VARCHAR(255),

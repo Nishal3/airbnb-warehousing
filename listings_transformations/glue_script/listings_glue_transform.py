@@ -1,3 +1,4 @@
+# JUPYTER NOTEBOOK IS MORE RECENT!!!!!!!!!!!!
 # Imporing libraries
 import sys
 from awsglue.transforms import *
@@ -38,7 +39,9 @@ def hostQualifications_df_host_verifications_transform(verifs_list):
 
 # UDF To convert t/f to 1/0 respectively
 def t_f_to_1_0(t_f):
-    if t_f == "t":
+    if not t_f:
+        return 0
+    elif "t" in t_f:
         return 1
     else:
         return 0
@@ -123,7 +126,7 @@ hostQualifications_array_transform = udf(
 
 truefalse_to_10 = udf(t_f_to_1_0, IntegerType())
 
-listingDfQuery = """
+listingsDfQuery = """
                  SELECT id as listing_id,
                         host_id,
                         host_url,
@@ -206,7 +209,7 @@ listingDfQuery = """
 """
 
 try:
-    listingDf = spark.sql(listingDfQuery)
+    listingsDf = spark.sql(listingsDfQuery)
 except Exception as e:
     logger.error(f"Error transforming listings table with SQL: {e}")
     # Keep note we don't have to stop the SparkContext, Glue manages that itself
@@ -218,15 +221,54 @@ logger.info("Transformed Listings Table With SQL")
 property_baths_split = split(col("bathrooms"), " ", limit=2)
 
 # Adding the two new columns
-listingDf = listingDf.withColumn("bathroom_desc", property_baths_split.getItem(1))
-listingDf = listingDf.withColumn(
+listingsDf = listingsDf.withColumn("bathroom_desc", property_baths_split.getItem(1))
+listingsDf = listingsDf.withColumn(
     "bathrooms", property_baths_split.getItem(0).cast("decimal")
 )
 
 logger.info("Casting columns to correct data types...")
 
+logger.info("Transforming Host Verifications...")
+# Transforming Host Verifications
+listingsDf = listingsDf.withColumn(
+    "host_verifications", hostQualifications_array_transform(col("host_verifications"))
+)
+
+logger.info("Transformed Host Verifications")
+
+logger.info("Transforming True/False to 1/0...")
+
+# Transforming True/False to 1/0
+listingsDf = listingsDf.withColumns(
+    {
+        "host_is_superhost": truefalse_to_10(col("host_is_superhost")),
+        "host_has_profile_pic": truefalse_to_10(col("host_has_profile_pic")),
+        "host_identity_verified": truefalse_to_10(col("host_identity_verified")),
+        "has_availability": truefalse_to_10(col("has_availability")),
+        "instant_bookable": truefalse_to_10(col("instant_bookable")),
+    }
+)
+
+logger.info("Transformed True/False to 1/0")
+
+logger.info("Filling Nulls in Listings Table...")
+try:
+    listingsDf = listingsDf.na.fill(
+        {
+            "host_url": "N/A",
+            "host_name": "N/A",
+            "host_about": "N/A",
+            "host_since": "00-00-00",
+        }
+    )
+except Exception as e:
+    logger.error(f"Error filling nulls in listings table: {e}")
+    raise e
+
+logger.info("Casting columns to correct data types...")
+
 # Casting columns to correct data types
-listingDf = listingDf.withColumns(
+listingsDf = listingsDf.withColumns(
     {
         "listing_id": col("listing_id").cast(LongType()),
         "host_id": col("host_id").cast(LongType()),
@@ -316,36 +358,10 @@ listingDf = listingDf.withColumns(
 
 logger.info("Casted columns to correct data types")
 
-logger.info("Transforming Host Verifications...")
-# Transforming Host Verifications
-listingDf = listingDf.withColumn(
-    "host_verifications", hostQualifications_array_transform(col("host_verifications"))
-)
-
-logger.info("Transformed Host Verifications")
-
-logger.info("Transforming True/False to 1/0...")
-
-# Transforming True/False to 1/0
-listingDf = listingDf.withColumns(
-    {
-        "host_is_superhost": truefalse_to_10(col("host_is_superhost")),
-        "host_has_profile_pic": truefalse_to_10(col("host_has_profile_pic")),
-        "host_identity_verified": truefalse_to_10(col("host_identity_verified")),
-        "has_availability": truefalse_to_10(col("has_availability")),
-        "instant_bookable": truefalse_to_10(col("instant_bookable")),
-    }
-)
-
-logger.info("Transformed True/False to 1/0")
-
-# Recreating Listings View
-listingDf.createOrReplaceTempView("listing_df_view")
-
 # Creating Tables for Each Dimension
 
 # Host Table
-hostDf = listingDf.select(
+hostDf = listingsDf.select(
     "host_id",
     "host_url",
     "host_name",
@@ -409,7 +425,7 @@ hostListingsDiagsDf = hostListingsDiagsDf.withColumn(
 )
 
 # Property Table
-propertyDf = listingDf.select(
+propertyDf = listingsDf.select(
     "latitude",
     "longitude",
     "property_type",
@@ -427,7 +443,7 @@ propertyDf = propertyDf.dropDuplicates()
 propertyDf = propertyDf.withColumn("property_id", monotonically_increasing_id())
 
 # Reviews Table
-reviewsDiagnosticsDf = listingDf.select(
+reviewsDiagnosticsDf = listingsDf.select(
     "number_of_reviews",
     "number_of_reviews_ltm",
     "number_of_reviews_l30d",
@@ -451,7 +467,7 @@ reviewsDiagnosticsDf = reviewsDiagnosticsDf.withColumn(
 )
 
 # Scrapings Table
-scrapingsDf = listingDf.select("scrape_id", "last_scraped", "source")
+scrapingsDf = listingsDf.select("scrape_id", "last_scraped", "source")
 
 scrapingsDf = scrapingsDf.dropDuplicates()
 
@@ -459,7 +475,7 @@ scrapingsDf = scrapingsDf.dropDuplicates()
 scrapingsDf = scrapingsDf.withColumn("scraping_id", monotonically_increasing_id())
 
 # Neighbourhood Table
-neighbourhoodDf = listingDf.select(
+neighbourhoodDf = listingsDf.select(
     "neighbourhood", "neighbourhood_overview", "neighbourhood_cleansed"
 )
 
@@ -471,7 +487,7 @@ neighbourhoodDf = neighbourhoodDf.withColumn(
 )
 
 # Min Max Insights Table
-minMaxInsightsDf = listingDf.select(
+minMaxInsightsDf = listingsDf.select(
     "minimum_nights",
     "maximum_nights",
     "minimum_minimum_nights",
@@ -490,7 +506,7 @@ minMaxInsightsDf = minMaxInsightsDf.withColumn(
 )
 
 # Availability Table
-availabilityDf = listingDf.select(
+availabilityDf = listingsDf.select(
     "has_availability",
     "availability_30",
     "availability_60",
@@ -501,7 +517,9 @@ availabilityDf = listingDf.select(
 availabilityDf = availabilityDf.dropDuplicates()
 
 # Assigning ID
-availabilityDf = availabilityDf.withColumn("avail_id", monotonically_increasing_id())
+availabilityDf = availabilityDf.withColumn(
+    "avail_info_id", monotonically_increasing_id()
+)
 
 # Joining Tables
 
@@ -531,7 +549,7 @@ logger.info("Validating Host Table Schemas...")
 
 hostQualificationsSchema = StructType(
     [
-        StructField("host_quals_id", IntegerType(), False),
+        StructField("host_quals_id", LongType(), False),
         StructField("host_response_time", StringType(), True),
         StructField("host_response_rate", DecimalType(3, 2), True),
         StructField("host_acceptance_rate", DecimalType(3, 2), True),
@@ -546,7 +564,7 @@ hostQualificationsSchema = StructType(
 
 hostListingsDiagsSchema = StructType(
     [
-        StructField("host_listings_diags_id", IntegerType(), False),
+        StructField("host_listings_diags_id", LongType(), False),
         StructField("calculated_host_listings_count", IntegerType(), True),
         StructField("calculated_host_listings_count_entire_homes", IntegerType(), True),
         StructField(
@@ -604,8 +622,8 @@ hostSchema = StructType(
         StructField(
             "host_id", LongType(), True
         ),  # Nullable is True because we did not run monotonically_increasing_id
-        StructField("host_quals_id", IntegerType(), True),
-        StructField("host_listings_diags_id", IntegerType(), True),
+        StructField("host_quals_id", LongType(), True),
+        StructField("host_listings_diags_id", LongType(), True),
         StructField("host_url", StringType(), True),
         StructField("host_name", StringType(), True),
         StructField("host_since", DateType(), True),
@@ -756,8 +774,8 @@ logger.info("Schemas Validated Before Final Join")
 logger.info("Joining Final Table...")
 
 try:
-    listingDf = (
-        listingDf.join(hostDf, on="host_id", how="left")
+    listingsDf = (
+        listingsDf.join(hostDf, on="host_id", how="left")
         .join(propertyDf, on=property_join_conditions, how="left")
         .join(reviewsDiagnosticsDf, on=reviews_join_conditions, how="left")
         .join(scrapingsDf, on=["last_scraped", "source"], how="left")
@@ -783,7 +801,7 @@ try:
             "neighbourhood_id",
             "property_id",
             "minmax_insights_id",
-            "avail_id",
+            "avail_info_id",
             "rev_diag_id",
             "listing_url",
             "name",
@@ -800,7 +818,7 @@ logger.info("Final Table Joined")
 
 logger.info("Validating Listings DataFrame After Join...")
 
-listingDfSchema = StructType(
+listingsDfSchema = StructType(
     [
         StructField(
             "listing_id", LongType(), False
@@ -810,7 +828,7 @@ listingDfSchema = StructType(
         StructField("neighbourhood_id", LongType(), True),
         StructField("property_id", LongType(), True),
         StructField("minmax_insights_id", LongType(), True),
-        StructField("avail_id", LongType(), True),
+        StructField("avail_info_id", LongType(), True),
         StructField("rev_diag_id", LongType(), True),
         StructField("listing_url", StringType(), True),
         StructField("name", StringType(), True),
@@ -821,7 +839,7 @@ listingDfSchema = StructType(
 )
 
 try:
-    listingDf.schema == (listingDfSchema)
+    listingsDf.schema == (listingsDfSchema)
 except Exception as e:
     logger.error(f"Error Validating Listings Schema: {e}")
     raise e
@@ -834,7 +852,7 @@ logger.info("Converting Spark Dataframes to Glue Dynamic Frames...")
 
 try:
     # Converting Dataframes to Glue Dynamic Frames
-    listingDf = DynamicFrame.fromDF(listingDf, glueContext, "listingDf")
+    listingsDf = DynamicFrame.fromDF(listingsDf, glueContext, "listingsDf")
     hostDf = DynamicFrame.fromDF(hostDf, glueContext, "hostDf")
     hostQualificationsDf = DynamicFrame.fromDF(
         hostQualificationsDf, glueContext, "hostQualificationsDf"
@@ -931,7 +949,7 @@ try:
     )
 
     glueContext.write_dynamic_frame.from_catalog(
-        frame=listingDf,
+        frame=listingsDf,
         database="airbnb_transformed_data",
         table_name="transformed_columbus_oh_listings_data_public_listings",
         redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
