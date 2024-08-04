@@ -1,4 +1,3 @@
-# JUPYTER NOTEBOOK IS MORE RECENT!!!!!!!!!!!!
 # Imporing libraries
 import sys
 from awsglue.transforms import *
@@ -19,6 +18,9 @@ from pyspark.sql.types import StructField, StructType
 from awsglue.context import GlueContext
 from awsglue.dynamicframe import DynamicFrame
 from awsglue.job import Job
+
+# Change the value for <YOURS3BUCKET> to be your S3 bucket
+REDSHIFT_TEMP_DIR = "s3://<YOURS3BUCKETNAME>/temp/"
 
 
 # UDF to transform host_verifications to a 3 character string
@@ -255,15 +257,38 @@ logger.info("Filling Nulls in Listings Table...")
 try:
     listingsDf = listingsDf.na.fill(
         {
-            "host_url": "N/A",
-            "host_name": "N/A",
             "host_about": "N/A",
-            "host_since": "00-00-00",
+            "host_location": "N/A",
+            "host_about": "N/A",
+            "host_neighbourhood": "N/A",
+            "host_response_time": "N/A",
+            "host_response_rate": -1,
+            "host_acceptance_rate": -1,
+            "host_is_superhost": -1,
+            "beds": -1,
+            "daily_price": -1,
+            "first_review": "00-00-00",
+            "last_review": "00-00-00",
+            "review_scores_rating": -1,
+            "review_scores_accuracy": -1,
+            "review_scores_cleanliness": -1,
+            "review_scores_checkin": -1,
+            "review_scores_communication": -1,
+            "review_scores_location": -1,
+            "review_scores_value": -1,
+            "reviews_per_month": -1,
+            "neighbourhood": "N/A",
+            "neighbourhood_overview": "N/A",
+            "neighbourhood_cleansed": "N/A",
+            "has_availability": -1,
+            "license": "N/A",
         }
     )
 except Exception as e:
     logger.error(f"Error filling nulls in listings table: {e}")
     raise e
+
+logger.info("Filled Nulls in Listings Table")
 
 logger.info("Casting columns to correct data types...")
 
@@ -709,7 +734,7 @@ reviewsDiagnosticsDfSchema = StructType(
         StructField("review_scores_accuracy", DecimalType(3, 2), True),
         StructField("review_scores_accuracy", DecimalType(3, 2), True),
         StructField("review_scores_accuracy", DecimalType(3, 2), True),
-        StructField("reviews_per_month", DecimalType(10, 2), True),
+        StructField("reviews_per_month", DecimalType(3, 2), True),
     ]
 )
 
@@ -889,70 +914,70 @@ try:
         frame=hostQualificationsDf,
         database="airbnb_transformed_data",
         table_name="transformed_columbus_oh_listings_data_public_host_quals_diags",
-        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
+        redshift_tmp_dir=REDSHIFT_TEMP_DIR,
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=hostListingsDiagsDf,
         database="airbnb_transformed_data",
         table_name="transformed_columbus_oh_listings_data_public_host_listings_diags",
-        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
+        redshift_tmp_dir=REDSHIFT_TEMP_DIR,
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=propertyDf,
         database="airbnb_transformed_data",
         table_name="transformed_columbus_oh_listings_data_public_property",
-        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
+        redshift_tmp_dir=REDSHIFT_TEMP_DIR,
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=reviewsDiagnosticsDf,
         database="airbnb_transformed_data",
         table_name="transformed_columbus_oh_listings_data_public_reviews_diagnostics",
-        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
+        redshift_tmp_dir=REDSHIFT_TEMP_DIR,
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=scrapingsDf,
         database="airbnb_transformed_data",
         table_name="transformed_columbus_oh_listings_data_public_scrapings",
-        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
+        redshift_tmp_dir=REDSHIFT_TEMP_DIR,
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=neighbourhoodDf,
         database="airbnb_transformed_data",
         table_name="transformed_columbus_oh_listings_data_public_neighbourhoods",
-        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
+        redshift_tmp_dir=REDSHIFT_TEMP_DIR,
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=minMaxInsightsDf,
         database="airbnb_transformed_data",
         table_name="transformed_columbus_oh_listings_data_public_minmax_insights",
-        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
+        redshift_tmp_dir=REDSHIFT_TEMP_DIR,
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=availabilityDf,
         database="airbnb_transformed_data",
         table_name="transformed_columbus_oh_listings_data_public_availability_info",
-        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
+        redshift_tmp_dir=REDSHIFT_TEMP_DIR,
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=hostDf,
         database="airbnb_transformed_data",
         table_name="transformed_columbus_oh_listings_data_public_host",
-        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
+        redshift_tmp_dir=REDSHIFT_TEMP_DIR,
     )
 
     glueContext.write_dynamic_frame.from_catalog(
         frame=listingsDf,
         database="airbnb_transformed_data",
         table_name="transformed_columbus_oh_listings_data_public_listings",
-        redshift_tmp_dir="s3://nishal-airbnb-transformed-redshift-data/temp",
+        redshift_tmp_dir=REDSHIFT_TEMP_DIR,
     )
 
 

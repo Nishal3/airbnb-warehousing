@@ -117,6 +117,9 @@ And if you want, you can run a simple select statement and describe the table as
 5. Click "Manually add the admin password" and type in a secure password or click "Generate a password". Be sure to save the password elsewhere!
 6. Click "Save configuration", and that's our workgroup created
 
+The workgroups page should now look like this:
+![ redshift_workgroup_screen ]
+
 ### 3.2 Creating Database and Tables for Transformed Data
 
 **Ideally we create a Redshfit user in IAM and restrict permissions to only those being used. For learning/dev purposes, we can skip this step**
@@ -131,9 +134,26 @@ And if you want, you can run a simple select statement and describe the table as
 Now if you open up the folder "transformed_columbus_oh_listings_data/public/Tables/" you should see the newly created tables. Here's what it should look like:
 ![ redshift_table_creation ]
 
-## ETL Using AWS Glue and Querying with Athena
+### 3.3 Creating a Redshift Temporary Directory (S3 Bucket)
 
-This marks the start of set-up and usage of AWS Glue to extract, transform, and load the data stored in the RDS instance. We will also use Athena to query the data from RDS and Redshift using the Glue data catalog.
+To load data into Redshift, we need to initialize a S3 bucket so Redshift can use it as a temporary directory.
+
+**YOU NEED TO CHANGE THE `REDSHIFT_TEMP_DIR` VARIABLE TO REFLECT YOUR S3 BUCKET IN THE `listing_glue_transform.py` FILE**
+
+1. Go to the S3 console
+2. Click "Create bucket" and give the bucket a unique name that contains "redshift" in it. Usually your name makes it unique, example: "nishal-airbnb-transformed-temp-redshift-data"
+3. Leave everything default and hit "Create bucket"
+4. Inside the bucket, create a folder names "temp" by entering the bucket and clicking "Create folder"
+5. Change the `REDSHIFT_TEMP_DIR` variable in the `listings_glue_transform.py` file in the `listings_transformations/glue_script/` directory
+
+This is what it should look like inside the bucket:
+![ s3_redshift_temp_folder ]
+
+Great! Now we've set up Redshift for the incoming data!
+
+## ETL Using AWS Glue and Querying Loaded Data in Redshift's Query Editor
+
+This marks the start of set-up and usage of AWS Glue to extract, transform, and load the data stored in the RDS instance. We will also query our transformed data in Redshift using its query editor.
 
 ## 4 Creating a Connector to the RDS Instance and Redshift Serverless
 
@@ -148,6 +168,8 @@ This marks the start of set-up and usage of AWS Glue to extract, transform, and 
 5. Now search for "AmazonRedshiftAllCommandsFullAccess" and check that
 6. Then search and check "AWSGlueServiceRole" and click "Next"
 7. Assign a meaningful name and description to the role and then click "Create role"
+
+<!-- The connector details should resemble this: -->
 
 ### 4.2 Creating an S3 Gateway and Connecting a Subnet
 
@@ -259,7 +281,9 @@ Download the transformation file before continuing. Go to [ this link ][transfor
 7. Edit the "Job timeout" option to be 10 minutes as well. We don't want to be racking up a huge AWS bill!
 8. Drop down "Advanced properties" and scroll down until you see "Connections"; here we will attatch the two connections we made, the RDS connector and the Redshift connector
 9. Click "Choose options" and select the two connections we've made
-10. Hit save up at the top right and
+10. Hit save up at the top right and we're done!
+
+### 5.2
 
 ## Data and Creative Commons Liscense for Data
 
@@ -269,11 +293,13 @@ Creative commons liscense for data: [Liscense][creative_liscense]
 
 <!-- Images  -->
 
-[ visual ]: https://dqkl9myp5qci5.cloudfront.net/airbnb_listings_etl_visual.png
-[ RDS_config ]: https://dqkl9myp5qci5.cloudfront.net/RDS_config.png
-[ rds_data_outputs ]: https://dqkl9myp5qci5.cloudfront.net/RDS_data_select_describe_output.png
-[ EC2_table_creation_and_load_output ]: https://dqkl9myp5qci5.cloudfront.net/EC2_table_creation_data_load_outputs.png
-[ redshift_table_creation ]: https://dqkl9myp5qci5.cloudfront.net/Redshift_table_creation.png
+[ visual ]: https://dqkl9myp5qci5.cloudfront.net/airbnb_listings_etl_visual.png "RDS, Redshift, and Glue Pipeline Visual"
+[ RDS_config ]: https://dqkl9myp5qci5.cloudfront.net/RDS_config.png "RDS Details Page"
+[ rds_data_outputs ]: https://dqkl9myp5qci5.cloudfront.net/RDS_data_select_describe_output.png "RDS Output After Running Table Creation Script"
+[ EC2_table_creation_and_load_output ]: https://dqkl9myp5qci5.cloudfront.net/EC2_table_creation_data_load_outputs.png "Loading Data Into RDS Using EC2"
+[ redshift_workgroup_screen ]: https://dqkl9myp5qci5.cloudfront.net/Redshift_workgroup_config.png "Workgroup Screen After Creating Workgroup"
+[ redshift_table_creation ]: https://dqkl9myp5qci5.cloudfront.net/Redshift_table_creation.png "Redshift Table Creation Output"
+[ s3_redshift_temp_folder ]: https://dqkl9myp5qci5.cloudfront.net/S3_Redshift_temp_bucket.png "Redshift S3 Temporary Directory Bucket"
 
 <!-- Airbnb Data -->
 
