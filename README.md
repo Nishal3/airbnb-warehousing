@@ -282,7 +282,7 @@ Now, select the crawlers and hit "Run". And now, we've fetched the column metada
 
 ## 5 Running a Glue Job to Transform RDS Listings Data and Move it to Redshift
 
-### 5.1 Configuring Job Script
+### 6.1 Configuring Job Script
 
 **After running the job, expect a ~$0.20 bill. Running Glue jobs are also not an offered service for AWS free tier**
 
@@ -299,7 +299,7 @@ Download the transformation file before continuing. Go to [ this link ][transfor
 9. Click "Choose options" and select the two connections we've made
 10. Hit save up at the top right and we're done!
 
-### 5.2 Creating a Glue Trigger
+### 6.2 Creating a Glue Trigger
 
 ## Data and Creative Commons Liscense for Data
 
