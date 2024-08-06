@@ -104,7 +104,7 @@ Now preconfiguration for RDS is complete! The details should look something like
 ![ EC2_table_creation_and_load_output ]
 
 And if you want, you can run a simple select statement and describe the table as well. If you do it should look like this:  
-![ rds_data_outputs ]
+![ RDS_data_outputs ]
 
 ## 3 Redshift Serverless Configuration and Table Creation
 
@@ -118,7 +118,7 @@ And if you want, you can run a simple select statement and describe the table as
 6. Click "Save configuration", and that's our workgroup created
 
 The workgroups page should now look like this:
-![ redshift_workgroup_screen ]
+![ Redshift_workgroup_screen ]
 
 ### 3.2 Creating Database and Tables for Transformed Data
 
@@ -132,7 +132,7 @@ The workgroups page should now look like this:
 6. Create the tables by pasting in the SQL Script from the `table_creation.sql` file, and click "Run"
 
 Now if you open up the folder "transformed_columbus_oh_listings_data/public/Tables/" you should see the newly created tables. Here's what it should look like:
-![ redshift_table_creation ]
+![ Redshift_table_creation ]
 
 ### 3.3 Creating a Redshift Temporary Directory (S3 Bucket)
 
@@ -147,7 +147,7 @@ To load data into Redshift, we need to initialize a S3 bucket so Redshift can us
 5. Change the `REDSHIFT_TEMP_DIR` variable in the `listings_glue_transform.py` file in the `listings_transformations/glue_script/` directory
 
 This is what it should look like inside the bucket:
-![ s3_redshift_temp_folder ]
+![ S3_Redshift_temp_folder ]
 
 Great! Now we've set up Redshift for the incoming data!
 
@@ -169,7 +169,8 @@ This marks the start of set-up and usage of AWS Glue to extract, transform, and 
 6. Then search and check "AWSGlueServiceRole" and click "Next"
 7. Assign a meaningful name and description to the role and then click "Create role"
 
-<!-- The connector details should resemble this: -->
+The IAM Role should resemble this:
+![ IAM_role_details ]
 
 ### 4.2 Creating an S3 Gateway and Connecting a Subnet
 
@@ -183,6 +184,9 @@ In order for a connection to work, the connector has to be able to access an S3 
 6. Select the default VPC or the VPC you created for this project
 7. Select the default route table, it should not have the "RDS-pvt-rt" name
 8. Allow full access (bad practice for production, use granular permissions in that case) and then click "Create endpoint"
+
+This is what the details of the endpoint will look like:
+![ VPC_S3_endpoint_details ]
 
 ### 4.3 Creating the Glue Connections
 
@@ -216,6 +220,12 @@ Same steps as RDS connection setup, but selecting Amazon Redshift for the data s
 7. After creating the connection, edit the connection to have the correct subnet by selecting it and clicking "Actions" -> "Edit"
 8. Scroll down, enter your password and under "Network options" -> "Subnet" select the correct subnet
 
+This is the details page of the RDS connector:
+![ RDS_connection_details ]
+
+And here's the details page of the Redshift Connector:
+![ Redshift_connection_details ]
+
 #### 4.4 Testing the Connections
 
 1. Select the connection you just made and click "Actions" -> "Test connection"
@@ -225,7 +235,10 @@ Same steps as RDS connection setup, but selecting Amazon Redshift for the data s
 
 **If you don't get a successful response, make sure your IAM role is correct and the VPC selected is the same as the VPC containing your database or redshift workgroup. Make sure the subnet you are using has access to an S3 gateway as well!**
 
-## 5 Using a Glue Crawler to Extract Metadata From Our Data Stores and Previewing Data Using Amazon Athena
+Both RDS and Redshift connections should result in successes that look like this:
+![ Redshift_connection_success ]
+
+## 5 Using a Glue Crawler to Extract Metadata From Our Data Stores
 
 ### 5.1 Creating the Databases in Glue Catalog to Connect Glue to the Databases From RDS and Redshift
 
@@ -239,7 +252,7 @@ Now we've set up databases in Glue Catalog!
 
 ### 5.2 Creating a Crawler to Get the Blueprint of the Data for Both RDS and Redshfit
 
-**Expect to get an ~$0.20 bill after running these crawlers, Glue Crawlers are not an offered service for free tier**
+**Expect to get a ~$0.20 bill after running these crawlers, Glue Crawlers are not an offered service for free tier**
 
 Crawlers don't actually copy the data into Glue. They collect metadata about the data and store in the Glue Catalog. The data stores we "extract data" [not actual data, just metadata] from are stored in a Glue database. Refer to the [ official docs ][ official_glue_docs ] for more info.
 
@@ -254,15 +267,18 @@ Crawlers don't actually copy the data into Glue. They collect metadata about the
 7. Click "Next" and choose the IAM role we created before. Proceed by clicking "Next"
 8. For the target database, choose the database we made in Glue for the untransformed data and click "Next"
 9. Click "Create crawler"
-   Here's how it might look:
+
+Here's how it might look:
+![ RDS_crawler_details ]
 
 #### 5.2.2 Redshift Crawler
 
 1. Rinse and repeat for Redshift assigning meaningful names and using the connection and database in Glue associating with Redshift. The only thing different is the data source's path, which is now "transformed_columbus_oh_listings_data/%"
 
 Here's how it might look:
+![ Redshift_crawler_details ]
 
-Select the crawlers and hit "Run". And now, we've fetched the column metadata for both data source and target!
+Now, select the crawlers and hit "Run". And now, we've fetched the column metadata for both data source and target!
 
 ## 5 Running a Glue Job to Transform RDS Listings Data and Move it to Redshift
 
@@ -283,7 +299,7 @@ Download the transformation file before continuing. Go to [ this link ][transfor
 9. Click "Choose options" and select the two connections we've made
 10. Hit save up at the top right and we're done!
 
-### 5.2
+### 5.2 Creating a Glue Trigger
 
 ## Data and Creative Commons Liscense for Data
 
@@ -295,11 +311,18 @@ Creative commons liscense for data: [Liscense][creative_liscense]
 
 [ visual ]: https://dqkl9myp5qci5.cloudfront.net/airbnb_listings_etl_visual.png "RDS, Redshift, and Glue Pipeline Visual"
 [ RDS_config ]: https://dqkl9myp5qci5.cloudfront.net/RDS_config.png "RDS Details Page"
-[ rds_data_outputs ]: https://dqkl9myp5qci5.cloudfront.net/RDS_data_select_describe_output.png "RDS Output After Running Table Creation Script"
+[ RDS_data_outputs ]: https://dqkl9myp5qci5.cloudfront.net/RDS_data_select_describe_output.png "RDS Output After Running Table Creation Script"
 [ EC2_table_creation_and_load_output ]: https://dqkl9myp5qci5.cloudfront.net/EC2_table_creation_data_load_outputs.png "Loading Data Into RDS Using EC2"
-[ redshift_workgroup_screen ]: https://dqkl9myp5qci5.cloudfront.net/Redshift_workgroup_config.png "Workgroup Screen After Creating Workgroup"
-[ redshift_table_creation ]: https://dqkl9myp5qci5.cloudfront.net/Redshift_table_creation.png "Redshift Table Creation Output"
-[ s3_redshift_temp_folder ]: https://dqkl9myp5qci5.cloudfront.net/S3_Redshift_temp_bucket.png "Redshift S3 Temporary Directory Bucket"
+[ Redshift_workgroup_screen ]: https://dqkl9myp5qci5.cloudfront.net/Redshift_workgroup_config.png "Workgroup Screen After Creating Workgroup"
+[ Redshift_table_creation ]: https://dqkl9myp5qci5.cloudfront.net/Redshift_table_creation.png "Redshift Table Creation Output"
+[ S3_Redshift_temp_folder ]: https://dqkl9myp5qci5.cloudfront.net/S3_Redshift_temp_bucket.png "Redshift S3 Temporary Directory Bucket"
+[ IAM_role_details ]: https://dqkl9myp5qci5.cloudfront.net/IAM_role_details.png "IAM Role Details"
+[ VPC_S3_endpoint_details ]: https://dqkl9myp5qci5.cloudfront.net/VPC_S3_endpoint_details.png
+[ Redshift_connection_details ]: https://dqkl9myp5qci5.cloudfront.net/Redshift_connection.png
+[ RDS_connection_details ]: https://dqkl9myp5qci5.cloudfront.net/RDS_connection.png
+[ Redshift_connection_success ]: https://dqkl9myp5qci5.cloudfront.net/redshift_successful_connect.png
+[ RDS_crawler_details ]: https://dqkl9myp5qci5.cloudfront.net/Glue_RDS_crawler_details.png
+[ Redshift_crawler_details ]: https://dqkl9myp5qci5.cloudfront.net/Glue_Redshift_crawler_details.png
 
 <!-- Airbnb Data -->
 
