@@ -280,7 +280,10 @@ Here's how it might look:
 
 Now, select the crawlers and hit "Run". And now, we've fetched the column metadata for both data source and target!
 
-## 5 Running a Glue Job to Transform RDS Listings Data and Move it to Redshift
+The "Tables" section in Glue should now look like this:
+![ Glue_tables_after_crawler_run]
+
+## 6 Running a Glue Job to Transform RDS Listings Data and Load it to Redshift Serverless
 
 ### 6.1 Configuring Job Script
 
@@ -291,13 +294,19 @@ Download the transformation file before continuing. Go to [ this link ][transfor
 1. Navigate to the Glue console
 2. Click "ETL jobs" on the left menu
 3. Click "Script editor" and click "Upload script"
-4. If you downloaded the repo, select the python file in the `listings_transformations/glue_script/` folder if you have not separately downloaded it, if you separately downloaded it, select that.
+4. If you downloaded the repo, select the python file in the `listings_transformations/glue_script/` folder, if you separately downloaded it, select that.
 5. In the "Job details" section give a fitting name and description, then choose the Glue IAM role we made for this project
 6. Scroll down and change the "Requested number of workers" to 2. You can leave it 10, but you might get a heftier bill
-7. Edit the "Job timeout" option to be 10 minutes as well. We don't want to be racking up a huge AWS bill!
+7. Edit the "Job timeout" option to be 10 minutes as well. We don't want to be racking up a huge AWS bill without knowing!
 8. Drop down "Advanced properties" and scroll down until you see "Connections"; here we will attatch the two connections we made, the RDS connector and the Redshift connector
 9. Click "Choose options" and select the two connections we've made
 10. Hit save up at the top right and we're done!
+
+This is what the details page looks like once all is said and done:  
+General Details:
+![ Glue_script_details_general ]  
+Connection Details:  
+![ Glue_script_details_connection ]
 
 ### 6.2 Creating a Glue Trigger
 
@@ -323,6 +332,9 @@ Creative commons liscense for data: [Liscense][creative_liscense]
 [ Redshift_connection_success ]: https://dqkl9myp5qci5.cloudfront.net/redshift_successful_connect.png
 [ RDS_crawler_details ]: https://dqkl9myp5qci5.cloudfront.net/Glue_RDS_crawler_details.png
 [ Redshift_crawler_details ]: https://dqkl9myp5qci5.cloudfront.net/Glue_Redshift_crawler_details.png
+[ Glue_tables_after_crawler_run ]: https://dqkl9myp5qci5.cloudfront.net/Glue_tables_after_crawler_run.png
+[ Glue_script_details_general ]: https://dqkl9myp5qci5.cloudfront.net/Glue_script_details1.png
+[ Glue_script_details_connection ]: https://dqkl9myp5qci5.cloudfront.net/Glue_script_details2.png
 
 <!-- Airbnb Data -->
 
