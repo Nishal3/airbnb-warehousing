@@ -68,7 +68,7 @@ job.init(args["JOB_NAME"], args)
 
 logger.info("Starting Job...")
 
-logger.info("Creating DynamicFrame from RDS...")
+logger.info("Creating Dynamic Frame from RDS...")
 
 # Loading in RDS data from AWS Glue
 try:
@@ -81,16 +81,16 @@ except Exception as e:
     logger.error(f"Error creating DynamicFrame from RDS: {e}")
     raise e
 
-logger.info("Created DynamicFrame from RDS")
+logger.info("Created Dynamic Frame from RDS")
 
-logger.info("Converting DynamicFrame to Spark DataFrame...")
+logger.info("Converting Dynamic Frame to Spark DataFrame...")
 
 # Converting to Spark DataFrame
 listingsDf = RDSdata.toDF()
 
-logger.info("Created Spark DataFrame")
+logger.info("Created Spark Data Frame")
 
-logger.info("Transforming Spark DataFrame...")
+logger.info("Transforming Spark Data Frame...")
 # Transforming Listings Table
 
 # Dropping Redundant/Empty Columns
@@ -224,11 +224,7 @@ property_baths_split = split(col("bathrooms"), " ", limit=2)
 
 # Adding the two new columns
 listingsDf = listingsDf.withColumn("bathroom_desc", property_baths_split.getItem(1))
-listingsDf = listingsDf.withColumn(
-    "bathrooms", property_baths_split.getItem(0).cast("decimal")
-)
-
-logger.info("Casting columns to correct data types...")
+listingsDf = listingsDf.withColumn("bathrooms", property_baths_split.getItem(0))
 
 logger.info("Transforming Host Verifications...")
 # Transforming Host Verifications
@@ -252,43 +248,6 @@ listingsDf = listingsDf.withColumns(
 )
 
 logger.info("Transformed True/False to 1/0")
-
-logger.info("Filling Nulls in Listings Table...")
-try:
-    listingsDf = listingsDf.na.fill(
-        {
-            "host_about": "N/A",
-            "host_location": "N/A",
-            "host_about": "N/A",
-            "host_neighbourhood": "N/A",
-            "host_response_time": "N/A",
-            "host_response_rate": -1,
-            "host_acceptance_rate": -1,
-            "host_is_superhost": -1,
-            "beds": -1,
-            "daily_price": -1,
-            "first_review": "00-00-00",
-            "last_review": "00-00-00",
-            "review_scores_rating": -1,
-            "review_scores_accuracy": -1,
-            "review_scores_cleanliness": -1,
-            "review_scores_checkin": -1,
-            "review_scores_communication": -1,
-            "review_scores_location": -1,
-            "review_scores_value": -1,
-            "reviews_per_month": -1,
-            "neighbourhood": "N/A",
-            "neighbourhood_overview": "N/A",
-            "neighbourhood_cleansed": "N/A",
-            "has_availability": -1,
-            "license": "N/A",
-        }
-    )
-except Exception as e:
-    logger.error(f"Error filling nulls in listings table: {e}")
-    raise e
-
-logger.info("Filled Nulls in Listings Table")
 
 logger.info("Casting columns to correct data types...")
 
@@ -382,6 +341,43 @@ listingsDf = listingsDf.withColumns(
 )
 
 logger.info("Casted columns to correct data types")
+
+logger.info("Filling Nulls in Listings Table...")
+try:
+    listingsDf = listingsDf.na.fill(
+        {
+            "host_about": "N/A",
+            "host_location": "N/A",
+            "host_about": "N/A",
+            "host_neighbourhood": "N/A",
+            "host_response_time": "NA",
+            "host_response_rate": -1,
+            "host_acceptance_rate": -1,
+            "host_is_superhost": -1,
+            "beds": -1,
+            "daily_price": -1,
+            "first_review": "00-00-00",
+            "last_review": "00-00-00",
+            "review_scores_rating": -1,
+            "review_scores_accuracy": -1,
+            "review_scores_cleanliness": -1,
+            "review_scores_checkin": -1,
+            "review_scores_communication": -1,
+            "review_scores_location": -1,
+            "review_scores_value": -1,
+            "reviews_per_month": -1,
+            "neighbourhood": "N/A",
+            "neighbourhood_overview": "N/A",
+            "neighbourhood_cleansed": "N/A",
+            "has_availability": -1,
+            "license": "N/A",
+        }
+    )
+except Exception as e:
+    logger.error(f"Error filling nulls in listings table: {e}")
+    raise e
+
+logger.info("Filled Nulls in Listings Table")
 
 # Creating Tables for Each Dimension
 
@@ -542,9 +538,7 @@ availabilityDf = listingsDf.select(
 availabilityDf = availabilityDf.dropDuplicates()
 
 # Assigning ID
-availabilityDf = availabilityDf.withColumn(
-    "avail_info_id", monotonically_increasing_id()
-)
+availabilityDf = availabilityDf.withColumn("avail_id", monotonically_increasing_id())
 
 # Joining Tables
 
@@ -826,7 +820,7 @@ try:
             "neighbourhood_id",
             "property_id",
             "minmax_insights_id",
-            "avail_info_id",
+            "avail_id",
             "rev_diag_id",
             "listing_url",
             "name",
@@ -987,6 +981,6 @@ except Exception as e:  # Chance of error is unlikely, just in case I've put thi
 
 logger.info("Dynamic Frames Written to Redshift")
 
-job.commit()
-
 logger.info("Job Complete")
+
+job.commit()

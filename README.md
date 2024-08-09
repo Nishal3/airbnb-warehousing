@@ -4,28 +4,28 @@
 
 ## Description and Overview of Airbnb Listings Warehousing Project
 
-We will start off with loading data into RDS to emulate a real-world scenario: data is already in an RDS instance and we need to perform an ETL to move it to Redshift. We have airbnb data about listings and want to store it in a data warehouse after running some sort of transformation. Finally, we make a dashboard using Tableau to finalize the project.
+We start by loading data into RDS to emulate a real-world scenario: data is already in an RDS instance, and we need to perform an ETL to move it to Redshift. In this case, we have Airbnb data about listings and want to store it in a data warehouse after running some transformation. The warehouse we will use is Redshift Serverless, and the ETL tool we will use to transform the data is Glue. The data then gets used for a Tableau dashboard.
 
-I recommend downloading this repo and copying things from the downloaded files. You could also copy and paste directly from GitHub, you're free to pick your poison.
+I recommend downloading this repo and copying things from the downloaded files. You could also copy and paste directly from GitHub; pick your poison.
 
 **A High-Level Overview:**
 
-1. Set-up RDS, EC2 connector to RDS, and Redshift Serverless
-2. Use EC2 connector to load data into RDS (in the real world, data would already be in RDS, we are setting up for a real-world circumstance)
+1. Set up RDS, EC2 connector to RDS, and Redshift Serverless
+2. Use an EC2 connector to load data into RDS (in the real world, data would already be in an RDS database. We are setting up for a real-world circumstance)
 3. Set up an IAM role for Glue
 4. Set up S3 Gateway for Glue connector
-5. Set up Database, connector and crawler in Glue
-6. Run crawler and create job script
+5. Set up Database, connector, and crawler in Glue
+6. Run the crawler and create a job script
 7. Trigger job script
 8. Set up a dashboard using Tableau using the data from Redshift
 
 ## Preconfiguration and Data Loading
 
-This marks the start of the tutorial. We start with preconfiguring RDS and then loading data into it. Then we preconfigure Redshift.
+Here marks the start of the guide. We start with preconfiguring RDS and then loading data into it. Then, we preconfigure Redshift.
 
 ## 1 Creating The RDS Instance
 
-First we will load data into the RDS instance, but before even that we need to create the RDS instance and EC2 connector instance
+First, we will load data into the RDS instance, but before that, we need to create the RDS instance and EC2 connector instance
 
 ### 1.1 Finding RDS and Setting up Free Tier
 
@@ -44,18 +44,18 @@ First we will load data into the RDS instance, but before even that we need to c
 
 ### 1.3 Setting up EC2 Connection and Creating RDS Instance
 
-1. Now click "Set up EC2 connection" and choose "Connect to an EC2 compute resource"
+1. Now click "Set up EC2 connection", and choose "Connect to an EC2 compute resource"
 2. If you have not made an EC2 instance for this separately, click "Create EC2 instance"
 3. Name your EC2 instance
 4. Keep the defaults
 5. Click "Launch instance", you will be prompted to select, create, or proceed without a key pair
-6. If you want a key pair continue reading these steps, or continue without one; no key pair will make the process less secure
+6. If a Key Pair sounds desirable, continue reading these steps, else continue without one. Keep in mind no key pair will make the process less secure
 7. Click "Create new key pair" and name it
-8. Leave everything else default and click "Launch instance"
+8. Leave everything else as default and click "Launch instance"
 
-**Make sure you don't delete the downloaded key pair. We might need it later to get into the EC2 instance**
+**Make sure you do not delete the downloaded Key Pair. We might need it later to get into the EC2 instance**
 
-Now preconfiguration for RDS is complete! The details should look something like this:
+We have now finished the configuration for RDS! The details should look something like this:
 ![ RDS_config ]
 
 ## 2 Loading Our Data Into RDS
@@ -65,30 +65,30 @@ Now preconfiguration for RDS is complete! The details should look something like
 1. Go to the EC2 Console
 2. Click "Instances (running)"
 3. Select your running EC2 instance that connects to the RDS instance
-4. Click "Actions" and click "Connect" at the dropdown
-5. Leave everything default and click "Connect"
+4. Click "Actions", and click "Connect" at the dropdown
+5. Leave everything default, and click "Connect"
 
-**If this does not work, follow the steps in the SSH client tab in the "Connect to instance" page**
+**If this does not work, follow the steps in the SSH client tab on the "Connect to instance" page**
 
 ### 2.2 Downloading MySQL on EC2 and Getting CSV File
 
-1. Running commands inside EC2 machine to download MySQL CE
-   1. Get the download file: `sudo wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm`
-   2. Make sure the file is there by running `ls`
-   3. Installing the file: `sudo dnf install mysql80-community-release-el9-1.noarch.rpm -y`
-   4. Run `sudo yum update` so that the installed file is recognized
-   5. Installing MySQL: `sudo dnf install mysql-community-server -y`
-   6. Starting MySQL: `sudo systemctl start mysqld`
-2. Make sure you are at the home directory, run the command `cd` to make sure of that
-3. To download the CSV file run `curl -O https://raw.githubusercontent.com/Nishal3/airbnb-warehousing/main/data/listings.csv`
+1. Running commands inside the EC2 machine to download MySQL CE
+      1. Get the download file: `sudo wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm`
+      2. Make sure the file is there by running `ls`
+      3. Installing the file: `sudo dnf install mysql80-community-release-el9-1.noarch.rpm -y`
+      4. Run `sudo yum update` so that the installed file is recognized
+      5. Installing MySQL: `sudo dnf install mysql-community-server -y`
+      6. Starting MySQL: `sudo systemctl start mysqld`
+2. Make sure you are in the home directory, and to make sure, run the command `cd`
+3. To download the CSV file, run `curl -O https://raw.githubusercontent.com/Nishal3/airbnb-warehousing/main/data/listings.csv`
 
 ### 2.3 Entering and Loading Data Into RDS
 
-**All files used in this step is in the `RDS_data_loading` directory**
+**All files used in this step are in the `RDS_data_loading` directory**
 
-1. Go to the RDS console and click on the database you've created. In the connectivity and security section, there is an endpoint, copy and save the endpoint for later
+1. Go to the RDS console and click on the database. In the connectivity and security section, there is an endpoint. Copy and save the endpoint for later use.
 
-2. Connect to the MySQL server by running this command inside of the EC2 instance: `mysql --user=admin --host=<YOUR_RDS_ENDPOINT> --password --local-infile` replacing "<YOUR_RDS_ENDPOINT>" with your endpoint. If you made the username something other than admin, make sure you change the `--user` option as well!
+2. Connect to the MySQL server by running this command inside of the EC2 instance: `mysql --user=admin --host=<YOUR_RDS_ENDPOINT> --password --local-infile` replacing "<YOUR_RDS_ENDPOINT>" with your endpoint. Be sure to change the `--user` option if you made the username something other than admin!
 
 3. Enter your RDS password when prompted
 
@@ -100,10 +100,12 @@ Now preconfiguration for RDS is complete! The details should look something like
 
 7. Load data into the table by copying and pasting the `RDS_data_load_script.sql` script and running it
 
-**Now we've loaded our "pre-existing" database!** It the outputs for both of these should look like this:  
+**Now, we have loaded our "pre-existing" database!**
+
+The outputs for both of these should look like this:  
 ![ EC2_table_creation_and_load_output ]
 
-And if you want, you can run a simple select statement and describe the table as well. If you do it should look like this:  
+And you can even run a simple select statement and describe the table. If you do, it should look like this:  
 ![ RDS_data_outputs ]
 
 ## 3 Redshift Serverless Configuration and Table Creation
@@ -111,55 +113,57 @@ And if you want, you can run a simple select statement and describe the table as
 ### 3.1 Creating a Default Workgroup
 
 1. Go to AWS Redshift, click the hamburger menu, and then "Redshift Serverless"
-2. On clicking, it will take you to the workgroup creation page, click "Customize Settings"
+2. It should take you to the workgroup creation page. Now that you are on the workgroup creation page, click "Customize Settings"
 3. Leave everything other than "Admin user name" and "Admin password" as default
-4. Assign a admin username or leave it as the default
+4. Assign an admin username or leave it as the default
 5. Click "Manually add the admin password" and type in a secure password or click "Generate a password". Be sure to save the password elsewhere!
-6. Click "Save configuration", and that's our workgroup created
+6. Click "Save configuration".
+
+**We have gotten our Redshift Serverless workgroup done and dusted**
 
 The workgroups page should now look like this:
 ![ Redshift_workgroup_screen ]
 
 ### 3.2 Creating Database and Tables for Transformed Data
 
-**Ideally we create a Redshfit user in IAM and restrict permissions to only those being used. For learning/dev purposes, we can skip this step**
+**Ideally, we create a Redshift user in IAM and restrict permissions to only those used. For learning/dev purposes, we can skip this step**
 
 1. Get into the query editor by clicking "Query editor v2" on the left menu
-2. Create the database by clicking the "Create" which has a plus and click "Database"
-3. Paste this in as the name: "transformed_columbus_oh_listings_data", or name it yourself, be sure to remember the DB name and apply it where the given name is used!
+2. Create the database by clicking "Create", which has a plus, and click "Database"
+3. Paste this in as the database name: "transformed_columbus_oh_listings_data", or name it yourself. Remember the DB name and apply it where the name given gets used: the script!
 4. For "Users and groups", have the database user be "admin", then click "Create database"
-5. In the query editor, click the second dropdown, it should have "dev" on it, and select the database we just created
+5. In the query editor, click the second dropdown. It should have "dev" on it, and select the database we just created
 6. Create the tables by pasting in the SQL Script from the `table_creation.sql` file, and click "Run"
 
-Now if you open up the folder "transformed_columbus_oh_listings_data/public/Tables/" you should see the newly created tables. Here's what it should look like:
+If you open the folder now, the "transformed_columbus_oh_listings_data/public/Tables/" folder, you should see the newly created tables. Here is what it should look like:
 ![ Redshift_table_creation ]
 
 ### 3.3 Creating a Redshift Temporary Directory (S3 Bucket)
 
-To load data into Redshift, we need to initialize a S3 bucket so Redshift can use it as a temporary directory.
+To load data into Redshift, we need to initialize an S3 bucket so Redshift can use it as a temporary directory.
 
 **YOU NEED TO CHANGE THE `REDSHIFT_TEMP_DIR` VARIABLE TO REFLECT YOUR S3 BUCKET IN THE `listing_glue_transform.py` FILE**
 
 1. Go to the S3 console
-2. Click "Create bucket" and give the bucket a unique name that contains "redshift" in it. Usually your name makes it unique, example: "nishal-airbnb-transformed-temp-redshift-data"
+2. Click "Create bucket" and give the bucket a unique name containing "redshift". Usually, your name makes it unique, for example: "nishal-airbnb-transformed-temp-redshift-data"
 3. Leave everything default and hit "Create bucket"
-4. Inside the bucket, create a folder names "temp" by entering the bucket and clicking "Create folder"
+4. Inside the bucket, create a folder named "temp" by entering the bucket and clicking "Create folder"
 5. Change the `REDSHIFT_TEMP_DIR` variable in the `listings_glue_transform.py` file in the `listings_transformations/glue_script/` directory
 
-This is what it should look like inside the bucket:
+Here is what it should look like inside the bucket:
 ![ S3_Redshift_temp_folder ]
 
-Great! Now we've set up Redshift for the incoming data!
+Great! Now, we have set up Redshift for the incoming data!
 
-## ETL Using AWS Glue and Querying Loaded Data in Redshift's Query Editor
+## ETL Using AWS Glue and Querying Loaded Data in the Redshift Serverless Query Editor
 
-This marks the start of set-up and usage of AWS Glue to extract, transform, and load the data stored in the RDS instance. We will also query our transformed data in Redshift using its query editor.
+From here on, we go into the setup and usage of AWS Glue to extract, transform, and load the data stored in the RDS instance. We will also query our transformed data in Redshift using its query editor.
 
 ## 4 Creating a Connector to the RDS Instance and Redshift Serverless
 
 ### 4.1 Creating an IAM Role for Glue to Access RDS and Redshift
 
-**The roles chosen here are not meant for production. Create your own more granular IAM roles for those. Here, we're just using default policies to make the role.**
+**The roles chosen here are not meant for production. Create your own more granular IAM roles for those. Here, we will use the default policies to make the role.**
 
 1. Search IAM in the AWS console, and click "Roles" in the left menu
 2. Click "Create role" and select "AWS service"
@@ -174,7 +178,7 @@ The IAM Role should resemble this:
 
 ### 4.2 Creating an S3 Gateway and Connecting a Subnet
 
-In order for a connection to work, the connector has to be able to access an S3 Gateway. We will be doing that in this step.
+For a connection to work, the connector has to be able to access an S3 Gateway. We will be doing that in this step.
 
 1. Navigate to the Virtual Private Cloud (VPC) console
 2. Click "Endpoints" on the left menu and then hit "Create endpoint"
@@ -182,10 +186,10 @@ In order for a connection to work, the connector has to be able to access an S3 
 4. In "Services", search S3 and hit enter
 5. We will use the one labeled "Gateway"
 6. Select the default VPC or the VPC you created for this project
-7. Select the default route table, it should not have the "RDS-pvt-rt" name
-8. Allow full access (bad practice for production, use granular permissions in that case) and then click "Create endpoint"
+7. Select the default route table; it should have the "RDS-pvt-rt" name
+8. Allow full access (This is bad practice in production. Use granular permissions in that case) and then click "Create endpoint"
 
-This is what the details of the endpoint will look like:
+Below is what the details of the endpoint will look like:
 ![ VPC_S3_endpoint_details ]
 
 ### 4.3 Creating the Glue Connections
@@ -195,19 +199,19 @@ This is what the details of the endpoint will look like:
 
 #### 4.3.1 Creating RDS Connection
 
-1. In the "Connections" section click "Create connection" and search for MySQL
-2. For "Database instances", the RDS instance you created earlier should show up, click that
+1. In the "Connections" section, click "Create connection" and search for MySQL
+2. For "Database instances", the RDS instance you created earlier should show up. Click that
 3. For "Database name" write "columbus_oh_listings"
 4. Type in your credentials for the database
-5. Click "Network options" and click the VPC associated with the RDS instance, if theres only one click that one
-6. You can choose any subnet as long as it is part of the default route table, I recommend remembering one subnets first 3-ish digits so you don't have to jump back and forth to VPC and Glue
-7. For security groups, choose the one associating the EC2 instance with the RDS instance it should be something like "ec2-rds-#" where # is a number
-8. Click "Next" and assign a meaningful name and description and then hit "Next" again
-9. Click "Create connection", and we're done!
+5. Click "Network options" and click the VPC associated with the RDS instance, and if there is only one, click that one
+6. You can choose any subnet given it is in the "RDS-pvt-rt". I recommend memorizing the first 3-ish digits of a subnet to prevent jumping back and forth between VPC and Glue.
+7. For security groups, choose the one associating the EC2 instance with the RDS instance and the default security group. The EC2 security group should resemble "ec2-rds-#" where # is a number.
+8. Click "Next" and assign a meaningful name and description, and then hit "Next" again
+9. Click "Create connection", and there we have it!
 
 #### 4.3.2 Creating Redshift Connection
 
-Same steps as RDS connection setup, but selecting Amazon Redshift for the data source
+The same steps as the RDS connection setup, but selecting Amazon Redshift for the data source
 
 **_Note_: If you assigned the Redshift workgroup a VPC other than the default, you will need to assign the same VPC for the Glue Connection**
 
@@ -218,12 +222,12 @@ Same steps as RDS connection setup, but selecting Amazon Redshift for the data s
 5. Click "Next" and assign it a meaningful name and description that you can recognize later
 6. Click "Next" again and hit "Create connection"
 7. After creating the connection, edit the connection to have the correct subnet by selecting it and clicking "Actions" -> "Edit"
-8. Scroll down, enter your password and under "Network options" -> "Subnet" select the correct subnet
+8. Scroll down, enter your password, and under "Network options" -> "Subnet" select the correct subnet
 
-This is the details page of the RDS connector:
+Below is the details page of the RDS connector:
 ![ RDS_connection_details ]
 
-And here's the details page of the Redshift Connector:
+And here is the details page of the Redshift Connector:
 ![ Redshift_connection_details ]
 
 #### 4.4 Testing the Connections
@@ -233,28 +237,28 @@ And here's the details page of the Redshift Connector:
 3. Wait for a successful response
 4. Rinse and repeat for the other connection you made
 
-**If you don't get a successful response, make sure your IAM role is correct and the VPC selected is the same as the VPC containing your database or redshift workgroup. Make sure the subnet you are using has access to an S3 gateway as well!**
+**If you get an error, check your IAM role, and the VPC selected is the same as the VPC containing your database or redshift workgroup. Make sure the subnet you are using has access to an S3 gateway as well!**
 
 Both RDS and Redshift connections should result in successes that look like this:
 ![ Redshift_connection_success ]
 
 ## 5 Using a Glue Crawler to Extract Metadata From Our Data Stores
 
-### 5.1 Creating the Databases in Glue Catalog to Connect Glue to the Databases From RDS and Redshift
+### 5.1 Creating the Databases in the Glue Catalog to Connect Glue to the Databases From RDS and Redshift
 
 1. In the Glue consoles left menu under "Data Catalog", click "Databases"
 2. Click "Add database"
 3. Give it a fitting name like "airbnb_untransformed_data" and a description
-4. Click create
+4. Click Create
 5. Again, click "Databases" and create another for the transformed data. Give it a fitting name like "airbnb_transformed_data", you know the process from here!
 
-Now we've set up databases in Glue Catalog!
+Now, we have finished the setup in the Glue Catalog!
 
-### 5.2 Creating a Crawler to Get the Blueprint of the Data for Both RDS and Redshfit
+### 5.2 Creating a Crawler to Get the Blueprint of the Data for Both RDS and Redshift
 
-**Expect to get a ~$0.20 bill after running these crawlers, Glue Crawlers are not an offered service for free tier**
+**Expect to get a ~$0.20 bill after running these crawlers. Glue Crawlers are not an offered service for free tier**
 
-Crawlers don't actually copy the data into Glue. They collect metadata about the data and store in the Glue Catalog. The data stores we "extract data" [not actual data, just metadata] from are stored in a Glue database. Refer to the [ official docs ][ official_glue_docs ] for more info.
+Crawlers do not copy the data into Glue. They collect metadata about the data and store it in the Glue Catalog. The data stores we "extract data" (not actual data, just metadata) from are stored in a Glue database. Refer to the [ official docs ][ official_glue_docs ] for more info.
 
 #### 5.2.1 RDS Crawler
 
@@ -268,14 +272,14 @@ Crawlers don't actually copy the data into Glue. They collect metadata about the
 8. For the target database, choose the database we made in Glue for the untransformed data and click "Next"
 9. Click "Create crawler"
 
-Here's how it might look:
+Below is how it might look:
 ![ RDS_crawler_details ]
 
 #### 5.2.2 Redshift Crawler
 
-1. Rinse and repeat for Redshift assigning meaningful names and using the connection and database in Glue associating with Redshift. The only thing different is the data source's path, which is now "transformed_columbus_oh_listings_data/%"
+1. Rinse and repeat for the Redshift crawler while assigning meaningful names to each section and using the connection and database in Glue associated with Redshift. The only thing different is the data source path, which is now "transformed_columbus_oh_listings_data/%"
 
-Here's how it might look:
+Below is how it might look:
 ![ Redshift_crawler_details ]
 
 Now, select the crawlers and hit "Run". And now, we've fetched the column metadata for both data source and target!
@@ -294,21 +298,50 @@ Download the transformation file before continuing. Go to [ this link ][transfor
 1. Navigate to the Glue console
 2. Click "ETL jobs" on the left menu
 3. Click "Script editor" and click "Upload script"
-4. If you downloaded the repo, select the python file in the `listings_transformations/glue_script/` folder, if you separately downloaded it, select that.
-5. In the "Job details" section give a fitting name and description, then choose the Glue IAM role we made for this project
+4. Select the Python script in the `listings_transformations/glue_script/` folder if the repository is downloaded. And if separately downloaded, select that.
+5. In the "Job details" section, give a fitting name and description. Then, choose the Glue IAM role we made for this project
 6. Scroll down and change the "Requested number of workers" to 2. You can leave it 10, but you might get a heftier bill
-7. Edit the "Job timeout" option to be 10 minutes as well. We don't want to be racking up a huge AWS bill without knowing!
-8. Drop down "Advanced properties" and scroll down until you see "Connections"; here we will attatch the two connections we made, the RDS connector and the Redshift connector
-9. Click "Choose options" and select the two connections we've made
-10. Hit save up at the top right and we're done!
+7. Edit the "Job timeout" option to be 10 minutes. We want to avoid racking up a huge AWS bill without knowing!
+8. Drop down the "Advanced properties" option and scroll down until you see "Connections". Here, we will attach the two connections we made, the RDS connector and the Redshift connector
+9. Click "Choose options" and select the two connections you made
+10. Hit save up at the top right, and done!
 
-This is what the details page looks like once all is said and done:  
+Below are what the details pages should look like once all is said and done:  
 General Details:
-![ Glue_script_details_general ]  
-Connection Details:  
+![ Glue_script_details_general ]  
+Connection Details:  
 ![ Glue_script_details_connection ]
 
-### 6.2 Creating a Glue Trigger
+### 6.2 Creating a Glue Trigger... And Triggering it
+
+#### 6.2.1 Creating the Trigger
+
+1. Go to "Triggers" on the left menu in the Glue console.
+2. Click "Add trigger", and enter a unique trigger name and meaningful description. Click "Next" once you are done.
+3. Click "Add a target resource"; in the dropdown click "Job". Then, select the job we made earlier.
+4. I recommend dropping down the parameters passed down option and then changing the job timeout to be 10 minutes just in case something goes wrong or we forget the job is running.
+5. Click "Add", then click "Next", and then "Create"
+
+Details should look like they do in the image below:
+![ Glue_trigger_details ]
+
+#### 6.2.2 Triggering the Trigger and Watching Job Logs
+
+1. Inside the "Triggers" tab in Glue, select your trigger
+2. Hit "Action" and then "Start trigger". The job should now be started
+3. To see the logs, go to "Jobs", select your job, hit "View details", and scroll a little. The logs should be there in the "Continuous logs" block.
+
+After the job runs successfully, you should see this in the details screen:
+![ Glue_job_run_details1 ]
+And this on the job run dashboard (as you can see, I was testing the script a bit before running it):
+![ Glue_job_run_details2 ]
+
+### 6.3 Querying the Loaded Data in Redshift Serverless
+
+1. Go to the Redshfit Serverless dashboard
+2. Click the "Query editor v2" tab on the left menu
+3. Create a new edior by clicking the "+" right on top of the "Run" button then clicking editor
+4. Run a select query on the listings tables by running: `SELECT * FROM listings`
 
 ## Data and Creative Commons Liscense for Data
 
@@ -335,6 +368,9 @@ Creative commons liscense for data: [Liscense][creative_liscense]
 [ Glue_tables_after_crawler_run ]: https://dqkl9myp5qci5.cloudfront.net/Glue_tables_after_crawler_run.png
 [ Glue_script_details_general ]: https://dqkl9myp5qci5.cloudfront.net/Glue_script_details1.png
 [ Glue_script_details_connection ]: https://dqkl9myp5qci5.cloudfront.net/Glue_script_details2.png
+[ Glue_trigger_details ]: https://dqkl9myp5qci5.cloudfront.net/Glue_trigger_details.png
+[ Glue_job_run_details1 ]: https://dqkl9myp5qci5.cloudfront.net/Glue_job_run_details1.png
+[ Glue_job_run_details2 ]: https://dqkl9myp5qci5.cloudfront.net/Glue_job_run_details2.png
 
 <!-- Airbnb Data -->
 

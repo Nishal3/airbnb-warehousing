@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS host_listings_diags (
 
 CREATE TABLE IF NOT EXISTS host_quals_diags (
     host_quals_id BIGINT PRIMARY KEY,
-    host_response_time VARCHAR(2),
+    host_response_time VARCHAR(3),
     host_response_rate NUMERIC(3, 2),
     host_acceptance_rate NUMERIC(3, 2),
     host_is_superhost INT,
@@ -56,8 +56,8 @@ CREATE TABLE IF NOT EXISTS host_quals_diags (
 
 CREATE TABLE IF NOT EXISTS host (
     host_id BIGINT PRIMARY KEY,
-    host_listings_diags_id INT,
-    host_quals_id INT,
+    host_listings_diags_id BIGINT,
+    host_quals_id BIGINT,
     host_url VARCHAR(50),
     host_name VARCHAR(255),
     host_since DATE,
