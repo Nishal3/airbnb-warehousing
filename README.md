@@ -341,7 +341,12 @@ And this on the job run dashboard (as you can see, I was testing the script a bi
 1. Go to the Redshfit Serverless dashboard
 2. Click the "Query editor v2" tab on the left menu
 3. Create a new edior by clicking the "+" right on top of the "Run" button then clicking editor
-4. Run a select query on the listings tables by running: `SELECT * FROM listings`
+4. Run a select query on the listings tables by running: `SELECT * FROM listings`. You can even run select queries on other tables and see the data inside of those!
+
+Here's what the data should look like:
+![ Redshift_select_listings ]
+
+**That wraps things up for the ETL!**
 
 ## Data and Creative Commons Liscense for Data
 
@@ -371,6 +376,7 @@ Creative commons liscense for data: [Liscense][creative_liscense]
 [ Glue_trigger_details ]: https://dqkl9myp5qci5.cloudfront.net/Glue_trigger_details.png
 [ Glue_job_run_details1 ]: https://dqkl9myp5qci5.cloudfront.net/Glue_job_run_details1.png
 [ Glue_job_run_details2 ]: https://dqkl9myp5qci5.cloudfront.net/Glue_job_run_details2.png
+[ Redshift_select_listings ]: https://dqkl9myp5qci5.cloudfront.net/Redshift_select_listings.png
 
 <!-- Airbnb Data -->
 

@@ -829,6 +829,8 @@ try:
             "instant_bookable",
         )
     )
+
+    listingsDf = listingsDf.withColumnRenamed("avail_id", "avail_info_id")
 except Exception as e:  # Chance of error is unlikely, just in case I've put this
     logger.error(f"Error {e}")
     raise e
