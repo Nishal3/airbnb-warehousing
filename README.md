@@ -348,6 +348,29 @@ Here's what the data should look like:
 
 **That wraps things up for the ETL!**
 
+## Tableau Dashboarding
+
+Now we start of the dashboarding process. Keep in mind to make this work, we need to make our Redshift Serverless Workgroup publicly accessible.
+
+If we were using Tableau Cloud, we could allow Redshift Serverless to allow access for Tableau Cloud's specific IP adress. This would be the best case, and in production this is what we would do.
+
+In this specific case, we do not have a Tableau Site assigned to us, nor do we have the power to directly make a site ourselves. We could contact support to make a site, but that poses some level of uncertainty, so we will just use Tableau Desktop's Redshift connector to connect to Redshift Serverless. The only way we can do this without setting things up in Tableau Cloud is to make the Redshift Serverless Workgroup to be public.
+
+Now that we've got that out of the way, let's get cracking!
+
+## 7 Setting up a Tableau Dashboard
+
+## THIS IS UNFINISHED. I DO NOT RECCOMEND FOLLOWING FROM HERE ONWARDS
+
+### 7.1 Configuring Redshift Serverless to be Public
+
+1. Go to the Redshift Serverless console in AWS
+2. In the left menu, open "Workgroup configuration"
+3. Select the default workgroup's name, it should be a link
+4. Scroll down until you find "Network and security" and click "Edit"
+5. Scroll down a bit, and check "Turn on Publicly accessible"
+6. Hit "Save changes", and there we go
+
 ## Data and Creative Commons Liscense for Data
 
 Data used: [Columbus, Ohio, United States 26 December, 2023 from Airbnb][data_link]
