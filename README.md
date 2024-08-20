@@ -350,11 +350,9 @@ Here's what the data should look like:
 
 ## Tableau Dashboarding
 
-Now we start of the dashboarding process. Keep in mind to make this work, we need to make our Redshift Serverless Workgroup publicly accessible.
+Now we start of the dashboarding process. Keep in mind to make this work, we need to make our Redshift Serverless Workgroup publicly accessible to a IP range.
 
-If we were using Tableau Cloud, we could allow Redshift Serverless to allow access for Tableau Cloud's specific IP adress. This would be the best case, and in production this is what we would do.
-
-In this specific case, we do not have a Tableau Site assigned to us, nor do we have the power to directly make a site ourselves. We could contact support to make a site, but that poses some level of uncertainty, so we will just use Tableau Desktop's Redshift connector to connect to Redshift Serverless. The only way we can do this without setting things up in Tableau Cloud is to make the Redshift Serverless Workgroup to be public.
+We will be using Tableau Cloud and can allow Redshift Serverless to allow access for Tableau Cloud's specific IP address range. This is the best case, and in production this is what we would do, maybe even getting a specific port rather than a range. But for our purposes here, this will work.
 
 Now that we've got that out of the way, let's get cracking!
 
@@ -362,7 +360,26 @@ Now that we've got that out of the way, let's get cracking!
 
 ## THIS IS UNFINISHED. I DO NOT RECCOMEND FOLLOWING FROM HERE ONWARDS
 
-### 7.1 Configuring Redshift Serverless to be Public
+### 7.1 Assigning the Redshift Workgroup a New Security Group
+
+Since we used all the default settings when we set up the workgroup, the default security group was assigned to the workgroup. We need to remove the default security group and attatch a new one that accepts Tableau Cloud's port range.
+
+#### 7.1.1 Making the Security Group
+
+1. Go to the VPC console, and in the left menu, under "Security", click "Security groups"
+2. Click "Create security group"
+3. Name the security group with an identifiable name
+4. "Click add rule" under "Inbound rules"
+5. Identify which IP address range your Tableau Cloud site uses. Use [_this website_][tableau_ip_ranges] to find it.
+6.
+
+#### 7.1.2 Assigning the Security Group to Redshift Serverless
+
+7. Go to the Redshift Serverless Dashboard, and click "Workgroup configuration" then click your workgroup
+8. Scroll a little, and in "Network and security" click "Edit"
+9.
+
+### 7.2 Configuring Redshift Serverless to be Public
 
 1. Go to the Redshift Serverless console in AWS
 2. In the left menu, open "Workgroup configuration"
@@ -410,3 +427,4 @@ Creative commons liscense for data: [Liscense][creative_liscense]
 
 [ official_glue_docs ]: https://docs.aws.amazon.com/glue/latest/dg/console-tables.html
 [ transformation_file ]: https://github.com/Nishal3/airbnb-warehousing/blob/main/listings_transformations/glue_script/listings_glue_transform.py
+[ tableau_ip_ranges ]: https://help.tableau.com/current/pro/desktop/en-us/publish_tableau_online_ip_authorization.htm
