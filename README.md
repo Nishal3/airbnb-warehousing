@@ -72,13 +72,13 @@ We have now finished the configuration for RDS! The details should look somethin
 
 ### 2.2 Downloading MySQL on EC2 and Getting CSV File
 
-1. Running commands inside the EC2 machine to download MySQL CE
-      1. Get the download file: `sudo wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm`
-      2. Make sure the file is there by running `ls`
-      3. Installing the file: `sudo dnf install mysql80-community-release-el9-1.noarch.rpm -y`
-      4. Run `sudo yum update` so that the installed file is recognized
-      5. Installing MySQL: `sudo dnf install mysql-community-server -y`
-      6. Starting MySQL: `sudo systemctl start mysqld`
+1. Running commands inside the EC2 machine to download MySQL CE  
+      1. Get the download file: `sudo wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm`  
+      2. Make sure the file is there by running `ls`  
+      3. Installing the file: `sudo dnf install mysql80-community-release-el9-1.noarch.rpm -y`  
+      4. Run `sudo yum update` so that the installed file is recognized  
+      5. Installing MySQL: `sudo dnf install mysql-community-server -y`  
+      6. Starting MySQL: `sudo systemctl start mysqld`  
 2. Make sure you are in the home directory, and to make sure, run the command `cd`
 3. To download the CSV file, run `curl -O https://raw.githubusercontent.com/Nishal3/airbnb-warehousing/main/data/listings.csv`
 
